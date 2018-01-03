@@ -1,10 +1,23 @@
 from django.db import models
+from django.utils.six import with_metaclass
 
 from .exceptions import SealedObject
 from .managers import SealableQuerySet
+from .related import sealable_accessor_classes
 
 
-class SealableModel(models.Model):
+class SealaleModelBase(models.base.ModelBase):
+    def __new__(cls, name, bases, attrs):
+        for attr, value in attrs.items():
+            if isinstance(value, models.ForeignObject):
+                sealable_accessor_class = sealable_accessor_classes.get(value.forward_related_accessor_class)
+                if sealable_accessor_class:
+                    value.forward_related_accessor_class = sealable_accessor_class
+        return super(SealaleModelBase, cls).__new__(cls, name, bases, attrs)
+
+
+# TODO: Use __init_subclass__ on Python 3.6+ instead of a metaclass.
+class SealableModel(with_metaclass(SealaleModelBase, models.Model)):
     objects = SealableQuerySet.as_manager()
 
     class Meta:
