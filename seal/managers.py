@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.six import string_types
 
 
 class SealedModelIterable(models.query.ModelIterable):
@@ -24,4 +25,12 @@ class SealableQuerySet(models.QuerySet):
         return clone
 
     def seal(self):
-        return self._clone(_sealed=True)
+        clone = self._clone(_sealed=True)
+        clone._prefetch_related_lookups = tuple(
+            models.Prefetch(
+                lookup,
+                self.model._meta.get_field(lookup).remote_field.model._default_manager.all(),
+            ) if isinstance(lookup, string_types) else lookup
+            for lookup in clone._prefetch_related_lookups
+        )
+        return clone
