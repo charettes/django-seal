@@ -20,10 +20,18 @@ class SealableQuerySetTests(TestCase):
         with self.assertRaisesMessage(SealedObject, 'Cannot fetch deferred fields weight on a sealed object.'):
             instance.weight
 
+    def test_not_sealed_deferred_field(self):
+        instance = SeaLion.objects.defer('weight').get()
+        self.assertEqual(instance.weight, 100)
+
     def test_sealed_related_object(self):
         instance = SeaLion.objects.seal().get()
         with self.assertRaisesMessage(SealedObject, 'Cannot fetch related field location on a sealed object.'):
             instance.location
+
+    def test_not_sealed_related_object(self):
+        instance = SeaLion.objects.get()
+        self.assertEqual(instance.location, self.location)
 
     def test_sealed_select_related(self):
         instance = SeaLion.objects.select_related('location').seal().get()
@@ -34,6 +42,10 @@ class SealableQuerySetTests(TestCase):
         message = 'Cannot fetch many-to-many field previous_locations on a sealed object.'
         with self.assertRaisesMessage(SealedObject, message):
             instance.previous_locations.all()
+
+    def test_not_sealed_many_to_many(self):
+        instance = SeaLion.objects.get()
+        self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
 
     def test_sealed_prefetched_many_to_many(self):
         instance = SeaLion.objects.prefetch_related('previous_locations').seal().get()

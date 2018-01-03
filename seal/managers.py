@@ -14,9 +14,8 @@ class SealedModelIterable(models.query.ModelIterable):
 
 class SealableQuerySet(models.QuerySet):
     def __init__(self, *args, **kwargs):
-        super(SealableQuerySet, self).__init__(*args, **kwargs)
         self._sealed = False
-        self._iterable_class = SealedModelIterable
+        super(SealableQuerySet, self).__init__(*args, **kwargs)
 
     def _clone(self, **kwargs):
         sealed = kwargs.pop('_sealed', False)
@@ -33,4 +32,6 @@ class SealableQuerySet(models.QuerySet):
             ) if isinstance(lookup, string_types) else lookup
             for lookup in clone._prefetch_related_lookups
         )
+        if issubclass(clone._iterable_class, models.query.ModelIterable):
+            clone._iterable_class = SealedModelIterable
         return clone
