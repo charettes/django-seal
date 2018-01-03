@@ -1,0 +1,2 @@
+class SealedObject(Exception):
+    pass

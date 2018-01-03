@@ -1,0 +1,6 @@
+syntax:glob
+*.py[co]
+dist/
+django_seal.egg-info/*
+.coverage
+.tox
