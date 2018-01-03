@@ -3,7 +3,9 @@ from django.utils.six import with_metaclass
 
 from .exceptions import SealedObject
 from .managers import SealableQuerySet
-from .related import sealable_accessor_classes
+from .related import (
+    create_sealable_m2m_contribute_to_class, sealable_accessor_classes,
+)
 
 
 class SealaleModelBase(models.base.ModelBase):
@@ -13,6 +15,11 @@ class SealaleModelBase(models.base.ModelBase):
                 sealable_accessor_class = sealable_accessor_classes.get(value.forward_related_accessor_class)
                 if sealable_accessor_class:
                     value.forward_related_accessor_class = sealable_accessor_class
+            elif isinstance(value, models.ManyToManyField):
+                # ManyToManyField doesn't declare a class level attribute for
+                # its forward related accessor class. We must provide override
+                # contribute_to_class to work around it.
+                value.contribute_to_class = create_sealable_m2m_contribute_to_class(value)
         return super(SealaleModelBase, cls).__new__(cls, name, bases, attrs)
 
 

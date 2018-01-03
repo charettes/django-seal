@@ -9,6 +9,7 @@ class SealableQuerySetTests(TestCase):
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
         cls.sealion = SeaLion.objects.create(height=1, weight=100, location=cls.location)
+        cls.sealion.previous_locations.add(cls.location)
 
     def test_state_sealed_assigned(self):
         instance = SeaLion.objects.seal().get()
@@ -27,3 +28,13 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_select_related(self):
         instance = SeaLion.objects.select_related('location').seal().get()
         self.assertEqual(instance.location, self.location)
+
+    def test_sealed_many_to_many(self):
+        instance = SeaLion.objects.seal().get()
+        message = 'Cannot fetch many-to-many field previous_locations on a sealed object.'
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.previous_locations.all()
+
+    def test_sealed_prefetched_many_to_many(self):
+        instance = SeaLion.objects.prefetch_related('previous_locations').seal().get()
+        self.assertSequenceEqual(instance.previous_locations.all(), [self.location])

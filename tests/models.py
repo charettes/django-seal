@@ -11,3 +11,4 @@ class SeaLion(SealableModel):
     height = models.PositiveIntegerField()
     weight = models.PositiveIntegerField()
     location = models.ForeignKey(Location, models.CASCADE, null=True)
+    previous_locations = models.ManyToManyField(Location, related_name='previous_visitors')
