@@ -26,6 +26,15 @@ Installation
 
     pip install -e git+https://github.com/charettes/django-seal#egg=seal
 
+Development
+-----
+
+Make your changes, and then run tests via tox:
+
+.. code:: sh
+
+    tox
+
 Usage
 -----
 
