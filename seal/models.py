@@ -12,9 +12,12 @@ class SealaleModelBase(models.base.ModelBase):
     def __new__(cls, name, bases, attrs):
         for attr, value in attrs.items():
             if isinstance(value, models.ForeignObject):
-                sealable_accessor_class = sealable_accessor_classes.get(value.forward_related_accessor_class)
+                sealable_accessor_class = sealable_accessor_classes.get(value.related_accessor_class)
                 if sealable_accessor_class:
-                    value.forward_related_accessor_class = sealable_accessor_class
+                    value.related_accessor_class = sealable_accessor_class
+                sealable_forward_accessor_class = sealable_accessor_classes.get(value.forward_related_accessor_class)
+                if sealable_forward_accessor_class:
+                    value.forward_related_accessor_class = sealable_forward_accessor_class
             elif isinstance(value, models.ManyToManyField):
                 # ManyToManyField doesn't declare a class level attribute for
                 # its forward related accessor class. We must provide override
