@@ -1,6 +1,12 @@
 django-seal
 ===========
 
+.. image:: https://publicdomainvectors.org/photos/Seal2.png
+    :target: https://publicdomainvectors.org
+    :alt: Seal
+
+------------
+
 .. image:: https://travis-ci.org/charettes/django-seal.svg?branch=master
     :target: https://travis-ci.org/charettes/django-seal
     :alt: Build Status
