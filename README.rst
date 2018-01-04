@@ -11,6 +11,11 @@ django-seal
     :target: https://travis-ci.org/charettes/django-seal
     :alt: Build Status
 
+.. image:: https://coveralls.io/repos/github/charettes/django-seal/badge.svg?branch=master
+    :target: https://coveralls.io/github/charettes/django-seal?branch=master
+    :alt: Coverage status
+
+
 Django application providing queryset sealing capability to force appropriate usage of ``only()``/``defer()`` and
 ``select_related()``/``prefetch_related()``.
 
