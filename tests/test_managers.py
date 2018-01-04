@@ -24,16 +24,16 @@ class SealableQuerySetTests(TestCase):
         instance = SeaLion.objects.defer('weight').get()
         self.assertEqual(instance.weight, 100)
 
-    def test_sealed_related_object(self):
+    def test_sealed_foreign_key(self):
         instance = SeaLion.objects.seal().get()
         with self.assertRaisesMessage(SealedObject, 'Cannot fetch related field location on a sealed object.'):
             instance.location
 
-    def test_not_sealed_related_object(self):
+    def test_not_sealed_foreign_key(self):
         instance = SeaLion.objects.get()
         self.assertEqual(instance.location, self.location)
 
-    def test_sealed_select_related(self):
+    def test_sealed_select_related_foreign_key(self):
         instance = SeaLion.objects.select_related('location').seal().get()
         self.assertEqual(instance.location, self.location)
 
@@ -50,3 +50,17 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_prefetched_many_to_many(self):
         instance = SeaLion.objects.prefetch_related('previous_locations').seal().get()
         self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+
+    def test_sealed_reverse_foreign_key(self):
+        instance = Location.objects.seal().get()
+        message = 'Cannot fetch many-to-many field visitors on a sealed object.'
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.visitors.all()
+
+    def test_not_sealed_reverse_foreign_key(self):
+        instance = Location.objects.get()
+        self.assertSequenceEqual(instance.visitors.all(), [self.sealion])
+
+    def test_sealed_prefetched_reverse_foreign_key(self):
+        instance = Location.objects.prefetch_related('visitors').seal().get()
+        self.assertSequenceEqual(instance.visitors.all(), [self.sealion])

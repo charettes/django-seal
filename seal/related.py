@@ -1,9 +1,33 @@
 from django.db.models.fields.related import (
     ForwardManyToOneDescriptor, ManyToManyDescriptor,
+    ReverseManyToOneDescriptor,
 )
 from django.utils.functional import cached_property
 
 from .exceptions import SealedObject
+
+
+def create_sealable_related_manager(related_manager_cls, field_name):
+    class SealableRelatedManager(related_manager_cls):
+        def get_queryset(self):
+            if getattr(self.instance._state, 'sealed', False):
+                try:
+                    prefetch_cache_name = self.prefetch_cache_name
+                except AttributeError:
+                    prefetch_cache_name = self.field.related_query_name()
+                try:
+                    return self.instance._prefetched_objects_cache[prefetch_cache_name]
+                except (AttributeError, KeyError):
+                    raise SealedObject('Cannot fetch many-to-many field %s on a sealed object.' % field_name)
+            return super(SealableRelatedManager, self).get_queryset()
+    return SealableRelatedManager
+
+
+class SealableReverseManyToOneDescriptor(ReverseManyToOneDescriptor):
+    @cached_property
+    def related_manager_cls(self):
+        related_manager_cls = super(SealableReverseManyToOneDescriptor, self).related_manager_cls
+        return create_sealable_related_manager(related_manager_cls, self.rel.name)
 
 
 class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
@@ -13,23 +37,11 @@ class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
         return super(SealableForwardManyToOneDescriptor, self).get_object(instance)
 
 
-def create_sealable_related_manager(related_manager_cls, field):
-    class SealableRelatedManager(related_manager_cls):
-        def get_queryset(self):
-            if getattr(self.instance._state, 'sealed', False):
-                try:
-                    return self.instance._prefetched_objects_cache[self.prefetch_cache_name]
-                except (AttributeError, KeyError):
-                    raise SealedObject('Cannot fetch many-to-many field %s on a sealed object.' % field.name)
-            return super(SealableRelatedManager, self).get_queryset()
-    return SealableRelatedManager
-
-
 class SealableManyToManyDescriptor(ManyToManyDescriptor):
     @cached_property
     def related_manager_cls(self):
         related_manager_cls = super(SealableManyToManyDescriptor, self).related_manager_cls
-        return create_sealable_related_manager(related_manager_cls, self.field)
+        return create_sealable_related_manager(related_manager_cls, self.field.name)
 
 
 def create_sealable_m2m_contribute_to_class(m2m):
@@ -42,6 +54,7 @@ def create_sealable_m2m_contribute_to_class(m2m):
 
 
 sealable_accessor_classes = {
+    ReverseManyToOneDescriptor: SealableReverseManyToOneDescriptor,
     ForwardManyToOneDescriptor: SealableForwardManyToOneDescriptor,
     ManyToManyDescriptor: SealableManyToManyDescriptor,
 }
