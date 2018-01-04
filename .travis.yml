@@ -39,10 +39,10 @@ matrix:
     - env: TOXENV=py36-master
 
 install:
-  - pip install tox
+  - pip install tox coveralls
 
 script:
   - tox
 
 after_success:
-  - coveralls
+  - if [ -f .coverage ]; then coveralls; fi
