@@ -1,6 +1,7 @@
 from django.db.models.fields.related import (
-    ForwardManyToOneDescriptor, ManyToManyDescriptor,
-    ReverseManyToOneDescriptor,
+    ForwardManyToOneDescriptor, ForwardOneToOneDescriptor,
+    ManyToManyDescriptor, ReverseManyToOneDescriptor,
+    ReverseOneToOneDescriptor,
 )
 from django.utils.functional import cached_property
 
@@ -37,6 +38,30 @@ class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
         return super(SealableForwardManyToOneDescriptor, self).get_object(instance)
 
 
+class SealableReverseOneToOneDescriptor(ReverseOneToOneDescriptor):
+    def get_queryset(self, instance, **hints):
+        if getattr(instance._state, 'sealed', False):
+            raise SealedObject('Cannot fetch related field %s on a sealed object.' % self.related.name)
+        return super(SealableReverseOneToOneDescriptor, self).get_queryset(instance=instance, **hints)
+
+
+class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
+    def get_object(self, instance):
+        if getattr(instance._state, 'sealed', False):
+            if self.field.remote_field.parent_link:
+                deferred = instance.get_deferred_fields()
+                # Because it's a parent link, all the data is available in the
+                # instance, so populate the parent model with this data.
+                rel_model = self.field.remote_field.model
+                fields = {field.attname for field in rel_model._meta.concrete_fields}
+
+                # If any of the related model's fields are deferred, prevent
+                # the query from being performed.
+                if any(field in fields for field in deferred):
+                    raise SealedObject('Cannot fetch related field %s on a sealed object.' % self.field.name)
+        return super(SealableForwardOneToOneDescriptor, self).get_object(instance)
+
+
 class SealableManyToManyDescriptor(ManyToManyDescriptor):
     @cached_property
     def related_manager_cls(self):
@@ -56,5 +81,7 @@ def create_sealable_m2m_contribute_to_class(m2m):
 sealable_accessor_classes = {
     ReverseManyToOneDescriptor: SealableReverseManyToOneDescriptor,
     ForwardManyToOneDescriptor: SealableForwardManyToOneDescriptor,
+    ReverseOneToOneDescriptor: SealableReverseOneToOneDescriptor,
+    ForwardOneToOneDescriptor: SealableForwardOneToOneDescriptor,
     ManyToManyDescriptor: SealableManyToManyDescriptor,
 }
