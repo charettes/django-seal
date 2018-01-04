@@ -81,10 +81,10 @@ def create_sealable_m2m_contribute_to_class(m2m):
 def create_sealable_contribute_to_related_class(m2m):
     contribute_to_related_class = m2m.contribute_to_related_class
 
-    def sealable_contribute_to_related_class(cls, *args, **kwargs):
-        contribute_to_related_class(cls, *args, **kwargs)
-        if not m2m.remote_field.is_hidden() and not m2m.related_model._meta.swapped:
-            setattr(cls, m2m.get_accessor_name(), SealableManyToManyDescriptor(m2m.remote_field, reverse=True))
+    def sealable_contribute_to_related_class(cls, related, *args, **kwargs):
+        contribute_to_related_class(cls, related, *args, **kwargs)
+        if not m2m.remote_field.is_hidden() and not related.related_model._meta.swapped:
+            setattr(cls, related.get_accessor_name(), SealableManyToManyDescriptor(m2m.remote_field, reverse=True))
     return sealable_contribute_to_related_class
 
 

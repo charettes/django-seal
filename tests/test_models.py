@@ -50,6 +50,6 @@ class SealableModelTests(SimpleTestCase):
     def test_sealed_instance_reverse_m2m_access(self):
         instance = Location.from_db('default', ['latitude', 'longitude'], [1.2, 3.4])
         instance._state.sealed = True
-        message = "Cannot fetch reverse many-to-many field previous_visitors on a sealed object."
+        message = "Cannot fetch many-to-many field previous_visitors on a sealed object."
         with self.assertRaisesMessage(SealedObject, message):
             instance.previous_visitors.all()
