@@ -5,8 +5,8 @@ django-seal
     :target: https://travis-ci.org/charettes/django-seal
     :alt: Build Status
 
-Django application providing queryset sealing capability to force appropriate usage of `only()`/`defer()` and
-`select_related()`/`prefetch_related()`.
+Django application providing queryset sealing capability to force appropriate usage of ``only()``/``defer()`` and
+``select_related()``/``prefetch_related()``.
 
 Installation
 ------------
