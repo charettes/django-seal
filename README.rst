@@ -62,3 +62,12 @@ Usage
     Traceback (most recent call last)
     ...
     SealedObject: Cannot fetch many-to-many field previous_locations on a sealed object.
+
+Development
+-----------
+
+Make your changes, and then run tests via tox:
+
+.. code:: sh
+
+    tox
