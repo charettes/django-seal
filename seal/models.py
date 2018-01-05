@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils.six import with_metaclass
 
@@ -5,7 +6,9 @@ from .exceptions import SealedObject
 from .managers import SealableQuerySet
 from .related import (
     create_sealable_m2m_contribute_to_class,
-    create_sealable_m2m_contribute_to_related_class, sealable_accessor_classes,
+    create_sealable_m2m_contribute_to_related_class,
+    create_sealable_reverse_generic_contribute_to_class,
+    sealable_accessor_classes,
 )
 
 
@@ -13,6 +16,8 @@ class SealaleModelBase(models.base.ModelBase):
     def __new__(cls, name, bases, attrs):
         for attr, value in attrs.items():
             if isinstance(value, models.ForeignObject):
+                if isinstance(value, GenericRelation):
+                    value.contribute_to_class = create_sealable_reverse_generic_contribute_to_class(value)
                 sealable_accessor_class = sealable_accessor_classes.get(value.related_accessor_class)
                 if sealable_accessor_class:
                     value.related_accessor_class = sealable_accessor_class

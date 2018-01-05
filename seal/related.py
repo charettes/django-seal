@@ -1,3 +1,6 @@
+from django.contrib.contenttypes.fields import (
+    ReverseGenericManyToOneDescriptor,
+)
 from django.db.models.fields.related import (
     ForwardManyToOneDescriptor, ForwardOneToOneDescriptor,
     ManyToManyDescriptor, ReverseManyToOneDescriptor,
@@ -29,6 +32,13 @@ class SealableReverseManyToOneDescriptor(ReverseManyToOneDescriptor):
     def related_manager_cls(self):
         related_manager_cls = super(SealableReverseManyToOneDescriptor, self).related_manager_cls
         return create_sealable_related_manager(related_manager_cls, self.rel.name)
+
+
+class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescriptor):
+    @cached_property
+    def related_manager_cls(self):
+        related_manager_cls = super(SealableReverseGenericManyToOneDescriptor, self).related_manager_cls
+        return create_sealable_related_manager(related_manager_cls, self.field.name)
 
 
 class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
@@ -68,6 +78,15 @@ class SealableManyToManyDescriptor(ManyToManyDescriptor):
         related_manager_cls = super(SealableManyToManyDescriptor, self).related_manager_cls
         field_name = self.rel.name if self.reverse else self.field.name
         return create_sealable_related_manager(related_manager_cls, field_name)
+
+
+def create_sealable_reverse_generic_contribute_to_class(generic_relation):
+    contribute_to_class = generic_relation.contribute_to_class
+
+    def sealable_contribute_to_class(cls, *args, **kwargs):
+        contribute_to_class(cls, *args, **kwargs)
+        setattr(cls, generic_relation.name, SealableReverseGenericManyToOneDescriptor(generic_relation.remote_field))
+    return sealable_contribute_to_class
 
 
 def create_sealable_m2m_contribute_to_class(m2m):
