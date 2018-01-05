@@ -24,7 +24,7 @@ Installation
 
 .. code:: sh
 
-    pip install -e git+https://github.com/charettes/django-seal#egg=seal
+    pip install django-seal
 
 Usage
 -----
