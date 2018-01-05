@@ -29,7 +29,6 @@ class SealaleModelBase(models.base.ModelBase):
         return super(SealaleModelBase, cls).__new__(cls, name, bases, attrs)
 
 
-# TODO: Use __init_subclass__ on Python 3.6+ instead of a metaclass.
 class SealableModel(with_metaclass(SealaleModelBase, models.Model)):
     objects = SealableQuerySet.as_manager()
 
