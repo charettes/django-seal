@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import SealedObject
 
@@ -48,9 +49,54 @@ class SealableQuerySetTests(TestCase):
         instance = SeaLion.objects.get()
         self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
 
-    def test_sealed_prefetched_many_to_many(self):
+    def test_sealed_string_prefetched_many_to_many(self):
         instance = SeaLion.objects.prefetch_related('previous_locations').seal().get()
-        self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+        with self.assertNumQueries(0):
+            self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+
+    def test_sealed_prefetch_prefetched_many_to_many(self):
+        instance = SeaLion.objects.prefetch_related(
+            Prefetch('previous_locations'),
+        ).seal().get()
+        with self.assertNumQueries(0):
+            self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+
+    def test_sealed_prefetch_queryset_prefetched_many_to_many(self):
+        instance = SeaLion.objects.prefetch_related(
+            Prefetch('previous_locations', Location.objects.all()),
+        ).seal().get()
+        with self.assertNumQueries(0):
+            self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+
+    def test_sealed_string_prefetched_nested_many_to_many(self):
+        instance = SeaLion.objects.prefetch_related('previous_locations__previous_visitors').seal().get()
+        with self.assertNumQueries(0):
+            self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+            self.assertSequenceEqual(
+                instance.previous_locations.all()[0].previous_visitors.all(), [self.sealion]
+            )
+
+    def test_sealed_prefetch_prefetched_nested_many_to_many(self):
+        instance = SeaLion.objects.prefetch_related(
+            Prefetch('previous_locations__previous_visitors'),
+        ).seal().get()
+        with self.assertNumQueries(0):
+            self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+            self.assertSequenceEqual(
+                instance.previous_locations.all()[0].previous_visitors.all(), [self.sealion]
+            )
+
+    def test_prefetched_sealed_many_to_many(self):
+        instance = SeaLion.objects.prefetch_related(
+            Prefetch('previous_locations', Location.objects.seal()),
+        ).get()
+        with self.assertNumQueries(0):
+            self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
+        message = 'Cannot fetch many-to-many field previous_visitors on a sealed object.'
+        with self.assertRaisesMessage(SealedObject, message):
+            self.assertSequenceEqual(
+                instance.previous_locations.all()[0].previous_visitors.all(), [self.sealion]
+            )
 
     def test_sealed_deferred_parent_link(self):
         instance = GreatSeaLion.objects.only('pk').seal().get()
