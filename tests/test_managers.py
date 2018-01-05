@@ -92,3 +92,17 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_select_related_reverse_parent_link(self):
         instance = SeaLion.objects.select_related('greatsealion').seal().get()
         self.assertEqual(instance.greatsealion, self.great_sealion)
+
+    def test_sealed_reverse_many_to_many(self):
+        instance = Location.objects.seal().get()
+        message = 'Cannot fetch many-to-many field previous_visitors on a sealed object.'
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.previous_visitors.all()
+
+    def test_not_reverse_sealed_many_to_many(self):
+        instance = Location.objects.get()
+        self.assertSequenceEqual(instance.previous_visitors.all(), [self.sealion])
+
+    def test_sealed_prefetched_reverse_many_to_many(self):
+        instance = Location.objects.prefetch_related('previous_visitors').seal().get()
+        self.assertSequenceEqual(instance.previous_visitors.all(), [self.sealion])

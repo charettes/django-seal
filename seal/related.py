@@ -66,7 +66,8 @@ class SealableManyToManyDescriptor(ManyToManyDescriptor):
     @cached_property
     def related_manager_cls(self):
         related_manager_cls = super(SealableManyToManyDescriptor, self).related_manager_cls
-        return create_sealable_related_manager(related_manager_cls, self.field.name)
+        field_name = self.rel.name if self.reverse else self.field.name
+        return create_sealable_related_manager(related_manager_cls, field_name)
 
 
 def create_sealable_m2m_contribute_to_class(m2m):
@@ -78,10 +79,19 @@ def create_sealable_m2m_contribute_to_class(m2m):
     return sealable_contribute_to_class
 
 
+def create_sealable_m2m_contribute_to_related_class(m2m):
+    contribute_to_related_class = m2m.contribute_to_related_class
+
+    def sealable_contribute_to_related_class(cls, related, *args, **kwargs):
+        contribute_to_related_class(cls, related, *args, **kwargs)
+        if not m2m.remote_field.is_hidden() and not related.related_model._meta.swapped:
+            setattr(cls, related.get_accessor_name(), SealableManyToManyDescriptor(m2m.remote_field, reverse=True))
+    return sealable_contribute_to_related_class
+
+
 sealable_accessor_classes = {
     ReverseManyToOneDescriptor: SealableReverseManyToOneDescriptor,
     ForwardManyToOneDescriptor: SealableForwardManyToOneDescriptor,
     ReverseOneToOneDescriptor: SealableReverseOneToOneDescriptor,
     ForwardOneToOneDescriptor: SealableForwardOneToOneDescriptor,
-    ManyToManyDescriptor: SealableManyToManyDescriptor,
 }
