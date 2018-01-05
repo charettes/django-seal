@@ -9,7 +9,7 @@ class SealedModelIterable(models.query.ModelIterable):
     def __iter__(self):
         objs = super(SealedModelIterable, self).__iter__()
         for obj in objs:
-            obj._state.sealed = True
+            obj.seal()
             yield obj
 
 

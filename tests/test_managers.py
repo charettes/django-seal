@@ -2,7 +2,7 @@ from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Location, SeaLion
+from .models import GreatSeaLion, Koala, Location, SeaLion
 
 
 class SealableQuerySetTests(TestCase):
@@ -10,6 +10,7 @@ class SealableQuerySetTests(TestCase):
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
         cls.great_sealion = GreatSeaLion.objects.create(height=1, weight=100, location=cls.location)
+        cls.koala = Koala.objects.create(height=1, weight=10)
         cls.sealion = cls.great_sealion.sealion_ptr
         cls.sealion.previous_locations.add(cls.location)
 
@@ -152,3 +153,7 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_prefetched_reverse_many_to_many(self):
         instance = Location.objects.prefetch_related('previous_visitors').seal().get()
         self.assertSequenceEqual(instance.previous_visitors.all(), [self.sealion])
+
+    def test_improper_usage_raises_error(self):
+        with self.assertRaises(AttributeError):
+            Koala.objects.only('pk').seal().get()
