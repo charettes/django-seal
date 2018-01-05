@@ -33,6 +33,9 @@ class SealaleModelBase(models.base.ModelBase):
 class SealableModel(with_metaclass(SealaleModelBase, models.Model)):
     objects = SealableQuerySet.as_manager()
 
+    def seal(self):
+        self._state.sealed = True
+
     class Meta:
         abstract = True
 
