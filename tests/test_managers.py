@@ -2,10 +2,11 @@ from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Koala, Location, SeaLion
+from .models import GreatSeaLion, Koala, Location, SeaLion, Nickname
 
 
 class SealableQuerySetTests(TestCase):
+
     @classmethod
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
@@ -13,6 +14,8 @@ class SealableQuerySetTests(TestCase):
         cls.koala = Koala.objects.create(height=1, weight=10)
         cls.sealion = cls.great_sealion.sealion_ptr
         cls.sealion.previous_locations.add(cls.location)
+        cls.nickname_lester = Nickname.objects.create(name='Lester', content_object=cls.sealion)
+        cls.nickname_nowhere = Nickname.objects.create(name='Nowhere', content_object=cls.location)
 
     def test_state_sealed_assigned(self):
         instance = SeaLion.objects.seal().get()
@@ -157,3 +160,15 @@ class SealableQuerySetTests(TestCase):
     def test_improper_usage_raises_error(self):
         with self.assertRaises(AttributeError):
             Koala.objects.only('pk').seal().get()
+
+    def test_not_sealed_generic_relationship(self):
+        instance = SeaLion.objects.get()
+        self.assertSequenceEqual(instance.nicknames.all(), [self.nickname_lester])
+
+    def test_not_sealed_reverse_generic_relationship_with_ptr(self):
+        instance = Nickname.objects.filter(name='Lester').get()
+        self.assertSequenceEqual(instance.sealions.all(), [self.sealion])
+
+    def test_not_sealed_reverse_generic_relationship(self):
+        instance = Nickname.objects.filter(name='Nowhere').get()
+        self.assertSequenceEqual(instance.locations.all(), [self.location])

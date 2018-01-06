@@ -1,7 +1,7 @@
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Location, SeaLion
+from .models import GreatSeaLion, Location, Nickname, SeaLion
 
 
 class SealableModelTests(SimpleTestCase):
@@ -53,3 +53,21 @@ class SealableModelTests(SimpleTestCase):
         message = "Cannot fetch many-to-many field previous_visitors on a sealed object."
         with self.assertRaisesMessage(SealedObject, message):
             instance.previous_visitors.all()
+
+
+class ContentTypeSealableModelTests(TestCase):
+    # ContentType framework requires DB queries to be enabled so we can't use SimpleTestCase
+
+    def test_sealed_instance_generic_relationship_access(self):
+        instance = SeaLion.from_db('default', ['id'], [1])
+        instance._state.sealed = True
+        message = "Cannot fetch many-to-many field nicknames on a sealed object."
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.nicknames.all()
+
+    def test_sealed_instance_reverse_generic_relationship_access(self):
+        instance = Nickname.from_db('default', ['id', 'name'], [1, 'Lester'])
+        instance._state.sealed = True
+        message = "Cannot fetch many-to-many field sealions on a sealed object."
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.sealions.all()
