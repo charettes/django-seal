@@ -25,3 +25,7 @@ class Koala(models.Model):
     weight = models.PositiveIntegerField()
 
     objects = SealableQuerySet.as_manager()
+
+
+class Gull(SealableModel):
+    sealion = models.OneToOneField(SeaLion, models.CASCADE, related_name='gull')

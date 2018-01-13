@@ -59,6 +59,8 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
                 # the query from being performed.
                 if any(field in fields for field in deferred):
                     raise SealedObject('Cannot fetch related field %s on a sealed object.' % self.field.name)
+            else:
+                raise SealedObject('Cannot fetch related field %s on a sealed object.' % self.field.name)
         return super(SealableForwardOneToOneDescriptor, self).get_object(instance)
 
 

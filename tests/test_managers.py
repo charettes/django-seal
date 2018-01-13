@@ -2,7 +2,7 @@ from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Koala, Location, SeaLion
+from .models import GreatSeaLion, Gull, Koala, Location, SeaLion
 
 
 class SealableQuerySetTests(TestCase):
@@ -13,6 +13,7 @@ class SealableQuerySetTests(TestCase):
         cls.koala = Koala.objects.create(height=1, weight=10)
         cls.sealion = cls.great_sealion.sealion_ptr
         cls.sealion.previous_locations.add(cls.location)
+        cls.gull = Gull.objects.create(sealion=cls.sealion)
 
     def test_state_sealed_assigned(self):
         instance = SeaLion.objects.seal().get()
@@ -39,6 +40,19 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_select_related_foreign_key(self):
         instance = SeaLion.objects.select_related('location').seal().get()
         self.assertEqual(instance.location, self.location)
+
+    def test_sealed_one_to_one(self):
+        instance = Gull.objects.seal().get()
+        with self.assertRaisesMessage(SealedObject, 'Cannot fetch related field sealion on a sealed object.'):
+            instance.sealion
+
+    def test_not_sealed_one_to_one(self):
+        instance = Gull.objects.get()
+        self.assertEqual(instance.sealion, self.sealion)
+
+    def test_sealed_select_related_one_to_one(self):
+        instance = Gull.objects.select_related('sealion').seal().get()
+        self.assertEqual(instance.sealion, self.sealion)
 
     def test_sealed_many_to_many(self):
         instance = SeaLion.objects.seal().get()

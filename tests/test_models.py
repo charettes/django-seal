@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Location, SeaLion
+from .models import GreatSeaLion, Gull, Location, SeaLion
 
 
 class SealableModelTests(SimpleTestCase):
@@ -25,6 +25,20 @@ class SealableModelTests(SimpleTestCase):
         message = "Cannot fetch many-to-many field visitors on a sealed object."
         with self.assertRaisesMessage(SealedObject, message):
             instance.visitors.all()
+
+    def test_sealed_instance_one_to_one_access(self):
+        instance = Gull.from_db('default', ['id', 'sealion_id'], [1, 1])
+        instance.seal()
+        message = "Cannot fetch related field sealion on a sealed object."
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.sealion
+
+    def test_sealed_instance_reverse_one_to_one_access(self):
+        instance = SeaLion.from_db('default', ['id'], [1])
+        instance.seal()
+        message = "Cannot fetch related field gull on a sealed object."
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.gull
 
     def test_sealed_instance_parent_link_access(self):
         instance = SeaLion.from_db('default', ['id'], [1])
