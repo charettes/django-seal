@@ -49,5 +49,5 @@ class Koala(models.Model):
     objects = SealableQuerySet.as_manager()
 
 
-class Gull(SealableModel):
+class SeaGull(SealableModel):
     sealion = models.OneToOneField(SeaLion, models.CASCADE, related_name='gull')
