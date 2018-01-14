@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Gull, Location, SeaLion
+from .models import GreatSeaLion, Gull, Location, Nickname, SeaLion
 
 
 class SealableModelTests(SimpleTestCase):
@@ -67,3 +67,10 @@ class SealableModelTests(SimpleTestCase):
         message = "Cannot fetch many-to-many field previous_visitors on a sealed object."
         with self.assertRaisesMessage(SealedObject, message):
             instance.previous_visitors.all()
+
+    def test_sealed_instance_generic_foreign_key(self):
+        instance = Nickname.from_db('default', ['id', 'content_type_id', 'object_id'], [1, 1, 1])
+        instance.seal()
+        message = "Cannot fetch related field content_object on a sealed object."
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.content_object

@@ -97,3 +97,27 @@ sealable_accessor_classes = {
     ReverseOneToOneDescriptor: SealableReverseOneToOneDescriptor,
     ForwardOneToOneDescriptor: SealableForwardOneToOneDescriptor,
 }
+
+
+class SealableGenericForeignKeyProxy(object):
+    def __init__(self, field):
+        self.__field = field
+
+    def __getattr__(self, name):
+        return getattr(self.__field, name)
+
+    def contribute_to_class(self, cls, name, **kwargs):
+        self.__field.contribute_to_class(cls, name, **kwargs)
+        setattr(cls, name, self)
+
+    def __get__(self, instance, cls=None):
+        if instance is None:
+            return self
+
+        if getattr(instance._state, 'sealed', False) and not self.__field.is_cached(instance):
+            raise SealedObject('Cannot fetch related field %s on a sealed object.' % self.__field.name)
+
+        return self.__field.__get__(instance, cls)
+
+    def __set__(self, instance, value):
+        return self.__field.__set__(instance, value)

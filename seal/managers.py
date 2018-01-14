@@ -37,10 +37,16 @@ class SealableQuerySet(models.QuerySet):
                 head, tail = parts
             else:
                 head, tail = parts[0], None
-            queryset = self.model._meta.get_field(head).remote_field.model._default_manager.all()
-            if tail:
-                queryset = queryset.prefetch_related(tail)
-            return models.Prefetch(head, queryset, to_attr=to_attr)
+            remote_field = self.model._meta.get_field(head).remote_field
+            if remote_field:
+                queryset = remote_field.model._default_manager.all()
+                if tail:
+                    queryset = queryset.prefetch_related(tail)
+                return models.Prefetch(head, queryset, to_attr=to_attr)
+            # Some private fields such as GenericForeignKey don't have a remote
+            # field as reverse relationships have to be explicit defined using
+            # GenericRelation instances.
+            return prefetch_lookup
         elif isinstance(prefetch_lookup, models.Prefetch) and prefetch_lookup.queryset is None:
             return self._unsealed_prefetch_lookup(
                 prefetch_lookup.prefetch_through,

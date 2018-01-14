@@ -1,10 +1,11 @@
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.utils.six import with_metaclass
 
 from .exceptions import SealedObject
 from .managers import SealableQuerySet
 from .related import (
-    create_sealable_m2m_contribute_to_class,
+    SealableGenericForeignKeyProxy, create_sealable_m2m_contribute_to_class,
     create_sealable_m2m_contribute_to_related_class, sealable_accessor_classes,
 )
 
@@ -51,6 +52,8 @@ class SealaleModelBase(models.base.ModelBase):
                 # work around it.
                 value.contribute_to_class = create_sealable_m2m_contribute_to_class(value)
                 value.contribute_to_related_class = create_sealable_m2m_contribute_to_related_class(value)
+            elif isinstance(value, GenericForeignKey):
+                attrs[attr] = SealableGenericForeignKeyProxy(value)
         return super(SealaleModelBase, cls).__new__(cls, name, bases, attrs)
 
 

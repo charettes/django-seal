@@ -1,8 +1,10 @@
+from django.apps import apps
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Gull, Koala, Location, SeaLion
+from .models import GreatSeaLion, Gull, Koala, Location, Nickname, SeaLion
 
 
 class SealableQuerySetTests(TestCase):
@@ -14,6 +16,9 @@ class SealableQuerySetTests(TestCase):
         cls.sealion = cls.great_sealion.sealion_ptr
         cls.sealion.previous_locations.add(cls.location)
         cls.gull = Gull.objects.create(sealion=cls.sealion)
+        cls.nickname = Nickname.objects.create(name='Jonathan Livingston', content_object=cls.gull)
+        tests_models = tuple(apps.get_app_config('tests').get_models())
+        ContentType.objects.get_for_models(*tests_models, for_concrete_models=True)
 
     def test_state_sealed_assigned(self):
         instance = SeaLion.objects.seal().get()
@@ -126,6 +131,20 @@ class SealableQuerySetTests(TestCase):
         instance = GreatSeaLion.objects.seal().get()
         with self.assertNumQueries(0):
             self.assertEqual(instance.sealion_ptr, self.sealion)
+
+    def test_sealed_generic_foreign_key(self):
+        instance = Nickname.objects.seal().get()
+        with self.assertRaisesMessage(SealedObject, 'Cannot fetch related field content_object on a sealed object.'):
+            instance.content_object
+
+    def test_not_sealed_generic_foreign_key(self):
+        instance = Nickname.objects.get()
+        self.assertEqual(instance.content_object, self.gull)
+
+    def test_sealed_prefetch_related_generic_foreign_key(self):
+        instance = Nickname.objects.prefetch_related('content_object').seal().get()
+        with self.assertNumQueries(0):
+            self.assertEqual(instance.content_object, self.gull)
 
     def test_sealed_reverse_foreign_key(self):
         instance = Location.objects.seal().get()
