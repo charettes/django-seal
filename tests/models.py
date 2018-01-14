@@ -15,9 +15,22 @@ class SeaLion(SealableModel):
     previous_locations = models.ManyToManyField(Location, related_name='previous_visitors')
 
 
+class SeaLionAbstractSubclass(SeaLion):
+    class Meta:
+        abstract = True
+
+
+class SealionProxy(SeaLion):
+    class Meta:
+        proxy = True
+
+
 class GreatSeaLion(SeaLion):
-    # TODO: add support for auto-generated o2os parent_link and non-parent link o2o.
-    sealion_ptr = models.OneToOneField(SeaLion, models.CASCADE, parent_link=True, primary_key=True)
+    pass
+
+
+class GreatSeaLionExplicitParentLink(SeaLion):
+    sealion_ptr = models.OneToOneField('tests.SeaLion', models.CASCADE, parent_link=True, primary_key=True)
 
 
 class Koala(models.Model):

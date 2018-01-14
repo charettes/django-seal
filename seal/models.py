@@ -11,6 +11,31 @@ from .related import (
 
 class SealaleModelBase(models.base.ModelBase):
     def __new__(cls, name, bases, attrs):
+        meta = attrs.get('Meta')
+        abstract = meta and getattr(meta, 'abstract', False)
+        proxy = meta and getattr(meta, 'proxy', False)
+        if not (abstract or proxy):
+            # Turn implicit one-to-one parent link into explicit ones in order
+            # to replace their related accessors below.
+            concrete_bases = (
+                base for base in bases
+                if isinstance(base, models.base.ModelBase) and not base._meta.abstract
+            )
+            parent_links = {
+                models.utils.make_model_tuple(value.remote_field.model) for value in attrs.values()
+                if isinstance(value, models.OneToOneField) and value.remote_field.parent_link
+            }
+            for base in concrete_bases:
+                if models.utils.make_model_tuple(base) in parent_links:
+                    continue
+                parent_link_name = '%s_ptr' % base._meta.model_name
+                attrs[parent_link_name] = models.OneToOneField(
+                    base,
+                    on_delete=models.CASCADE,
+                    name=parent_link_name,
+                    auto_created=True,
+                    parent_link=True,
+                )
         for attr, value in attrs.items():
             if isinstance(value, models.ForeignObject):
                 sealable_accessor_class = sealable_accessor_classes.get(value.related_accessor_class)
