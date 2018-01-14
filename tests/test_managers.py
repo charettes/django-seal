@@ -26,7 +26,7 @@ class SealableQuerySetTests(TestCase):
 
     def test_sealed_deferred_field(self):
         instance = SeaLion.objects.seal().defer('weight').get()
-        with self.assertRaisesMessage(SealedObject, 'Cannot fetch deferred fields weight on a sealed object.'):
+        with self.assertRaisesMessage(SealedObject, 'Cannot fetch deferred field weight on a sealed object.'):
             instance.weight
 
     def test_not_sealed_deferred_field(self):

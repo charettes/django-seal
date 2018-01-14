@@ -38,10 +38,6 @@ class GreatSeaLion(SeaLion):
     pass
 
 
-class GreatSeaLionExplicitParentLink(SeaLion):
-    sealion_ptr = models.OneToOneField('tests.SeaLion', models.CASCADE, parent_link=True, primary_key=True)
-
-
 class Koala(models.Model):
     height = models.PositiveIntegerField()
     weight = models.PositiveIntegerField()
