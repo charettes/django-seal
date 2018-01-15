@@ -1,4 +1,6 @@
-from django.test import SimpleTestCase
+from django.apps import apps
+from django.contrib.contenttypes.models import ContentType
+from django.test import SimpleTestCase, TestCase
 from seal.exceptions import SealedObject
 
 from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
@@ -68,9 +70,23 @@ class SealableModelTests(SimpleTestCase):
         with self.assertRaisesMessage(SealedObject, message):
             instance.previous_visitors.all()
 
+
+class ContentTypesSealableModelTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        tests_models = tuple(apps.get_app_config('tests').get_models())
+        ContentType.objects.get_for_models(*tests_models, for_concrete_models=True)
+
     def test_sealed_instance_generic_foreign_key(self):
         instance = Nickname.from_db('default', ['id', 'content_type_id', 'object_id'], [1, 1, 1])
         instance.seal()
         message = "Cannot fetch related field content_object on a sealed object."
-        with self.assertRaisesMessage(SealedObject, message):
+        with self.assertNumQueries(0), self.assertRaisesMessage(SealedObject, message):
             instance.content_object
+
+    def test_sealed_instance_generic_relation(self):
+        instance = SeaGull.from_db('default', ['id'], [1])
+        instance.seal()
+        message = "Cannot fetch many-to-many field nicknames on a sealed object."
+        with self.assertNumQueries(0), self.assertRaisesMessage(SealedObject, message):
+            instance.nicknames.all()

@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import (
+    GenericForeignKey, ReverseGenericManyToOneDescriptor,
+)
 from django.db.models.fields import DeferredAttribute
 from django.db.models.fields.related import (
     ForwardManyToOneDescriptor, ForwardOneToOneDescriptor,
@@ -98,6 +100,13 @@ class SealableGenericForeignKey(GenericForeignKey):
         return super(SealableGenericForeignKey, self).__get__(instance, cls=cls)
 
 
+class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescriptor):
+    @cached_property
+    def related_manager_cls(self):
+        related_manager_cls = super(SealableReverseGenericManyToOneDescriptor, self).related_manager_cls
+        return create_sealable_related_manager(related_manager_cls, self.field.name)
+
+
 sealable_descriptor_classes = {
     DeferredAttribute: SealableDeferredAttribute,
     ForwardOneToOneDescriptor: SealableForwardOneToOneDescriptor,
@@ -106,4 +115,5 @@ sealable_descriptor_classes = {
     ReverseManyToOneDescriptor: SealableReverseManyToOneDescriptor,
     ManyToManyDescriptor: SealableManyToManyDescriptor,
     GenericForeignKey: SealableGenericForeignKey,
+    ReverseGenericManyToOneDescriptor: SealableReverseGenericManyToOneDescriptor,
 }

@@ -187,6 +187,20 @@ class SealableQuerySetTests(TestCase):
         instance = Location.objects.prefetch_related('previous_visitors').seal().get()
         self.assertSequenceEqual(instance.previous_visitors.all(), [self.sealion])
 
+    def test_sealed_generic_relation(self):
+        instance = SeaGull.objects.seal().get()
+        message = 'Cannot fetch many-to-many field nicknames on a sealed object.'
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.nicknames.all()
+
+    def test_not_sealed_generic_relation(self):
+        instance = SeaGull.objects.get()
+        self.assertSequenceEqual(instance.nicknames.all(), [self.nickname])
+
+    def test_sealed_prefetched_generic_relation(self):
+        instance = SeaGull.objects.prefetch_related('nicknames').seal().get()
+        self.assertSequenceEqual(instance.nicknames.all(), [self.nickname])
+
     def test_improper_usage_raises_error(self):
         with self.assertRaises(AttributeError):
             Koala.objects.only('pk').seal().get()

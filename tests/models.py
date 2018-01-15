@@ -1,4 +1,6 @@
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import (
+    GenericForeignKey, GenericRelation,
+)
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from seal.managers import SealableQuerySet
@@ -47,3 +49,4 @@ class Koala(models.Model):
 
 class SeaGull(SealableModel):
     sealion = models.OneToOneField(SeaLion, models.CASCADE, related_name='gull')
+    nicknames = GenericRelation('Nickname')
