@@ -1,3 +1,5 @@
+import warnings
+
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
@@ -12,6 +14,10 @@ from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
 
 
 class SealableModelTests(SimpleTestCase):
+    def setUp(self):
+        warnings.filterwarnings('error', category=UnsealedAttributeAccess)
+        self.addCleanup(warnings.resetwarnings)
+
     def test_sealed_instance_deferred_attribute_access(self):
         instance = SeaLion.from_db('default', ['id'], [1])
         instance.seal()
@@ -90,6 +96,10 @@ class ContentTypesSealableModelTests(TestCase):
     def setUpTestData(cls):
         tests_models = tuple(apps.get_app_config('tests').get_models())
         ContentType.objects.get_for_models(*tests_models, for_concrete_models=True)
+
+    def setUp(self):
+        warnings.filterwarnings('error', category=UnsealedAttributeAccess)
+        self.addCleanup(warnings.resetwarnings)
 
     def test_sealed_instance_generic_foreign_key(self):
         instance = Nickname.from_db('default', ['id', 'content_type_id', 'object_id'], [1, 1, 1])

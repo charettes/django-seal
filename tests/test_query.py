@@ -1,3 +1,5 @@
+import warnings
+
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
@@ -21,6 +23,10 @@ class SealableQuerySetTests(TestCase):
         cls.nickname = Nickname.objects.create(name='Jonathan Livingston', content_object=cls.gull)
         tests_models = tuple(apps.get_app_config('tests').get_models())
         ContentType.objects.get_for_models(*tests_models, for_concrete_models=True)
+
+    def setUp(self):
+        warnings.filterwarnings('error', category=UnsealedAttributeAccess)
+        self.addCleanup(warnings.resetwarnings)
 
     def test_state_sealed_assigned(self):
         instance = SeaLion.objects.seal().get()
