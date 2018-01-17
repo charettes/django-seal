@@ -45,6 +45,20 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_select_related_foreign_key(self):
         instance = SeaLion.objects.select_related('location').seal().get()
         self.assertEqual(instance.location, self.location)
+        instance = SeaGull.objects.select_related('sealion').seal().get()
+        with self.assertRaisesMessage(SealedObject, 'Cannot fetch related field location on a sealed object.'):
+            instance.sealion.location
+        instance = SeaGull.objects.select_related('sealion__location').seal().get()
+        self.assertEqual(instance.sealion.location, self.location)
+
+    def test_sealed_select_related_deferred_field(self):
+        instance = SeaGull.objects.select_related(
+            'sealion__location',
+        ).only('sealion__location__latitude').seal().get()
+        self.assertEqual(instance.sealion.location, self.location)
+        self.assertEqual(instance.sealion.location.latitude, self.location.latitude)
+        with self.assertRaisesMessage(SealedObject, 'Cannot fetch deferred field longitude on a sealed object.'):
+            instance.sealion.location.longitude
 
     def test_sealed_one_to_one(self):
         instance = SeaGull.objects.seal().get()

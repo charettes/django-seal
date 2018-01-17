@@ -1,15 +1,54 @@
 from __future__ import unicode_literals
 
+from functools import partial
+from operator import attrgetter
+
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
 from django.utils.six import string_types
 
 
+def get_select_related_getters(lookups):
+    """Turn a select_related dict structure into a tree of attribute getters"""
+    for lookup, nested_lookups in lookups.items():
+        yield (attrgetter(lookup), tuple(get_select_related_getters(nested_lookups)))
+
+
+def walk_select_relateds(obj, getters):
+    """Walk select related of obj from getters."""
+    for getter, nested_getters in getters:
+        related_obj = getter(obj)
+        yield related_obj
+        # yield from walk_select_relateds(related_obj, nested_getters)
+        for nested_related_obj in walk_select_relateds(related_obj, nested_getters):
+            yield nested_related_obj
+
+
 class SealedModelIterable(models.query.ModelIterable):
-    def __iter__(self):
+    def _sealed_iterator(self):
+        """Iterate over objects and seal them."""
         objs = super(SealedModelIterable, self).__iter__()
         for obj in objs:
             obj.seal()
+            yield obj
+
+    def _sealed_related_iterator(self, related_walker):
+        """Iterate over objects and seal them and their select related."""
+        for obj in self._sealed_iterator():
+            for related_obj in related_walker(obj):
+                related_obj.seal()
+            yield obj
+
+    def __iter__(self):
+        select_related = self.queryset.query.select_related
+        if select_related:
+            select_related_getters = tuple(get_select_related_getters(self.queryset.query.select_related))
+            related_walker = partial(walk_select_relateds, getters=select_related_getters)
+            iterator = self._sealed_related_iterator(related_walker)
+        else:
+            iterator = self._sealed_iterator()
+        # yield from iterator
+        for obj in iterator:
             yield obj
 
 
