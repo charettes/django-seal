@@ -18,11 +18,16 @@ class Location(SealableModel):
     longitude = models.FloatField()
 
 
+class Leak(models.Model):
+    description = models.TextField()
+
+
 class SeaLion(SealableModel):
     height = models.PositiveIntegerField()
     weight = models.PositiveIntegerField()
     location = models.ForeignKey(Location, models.CASCADE, null=True, related_name='visitors')
     previous_locations = models.ManyToManyField(Location, related_name='previous_visitors')
+    leak = models.ForeignKey(Leak, models.CASCADE, null=True)
 
 
 class SeaLionAbstractSubclass(SeaLion):

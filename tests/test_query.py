@@ -4,14 +4,17 @@ from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import UnsealedAttributeAccess
 
-from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
+from .models import GreatSeaLion, Leak, Location, Nickname, SeaGull, SeaLion
 
 
 class SealableQuerySetTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
-        cls.great_sealion = GreatSeaLion.objects.create(height=1, weight=100, location=cls.location)
+        cls.leak = Leak.objects.create(description='Salt water')
+        cls.great_sealion = GreatSeaLion.objects.create(
+            height=1, weight=100, location=cls.location, leak=cls.leak,
+        )
         cls.sealion = cls.great_sealion.sealion_ptr
         cls.sealion.previous_locations.add(cls.location)
         cls.gull = SeaGull.objects.create(sealion=cls.sealion)
@@ -52,6 +55,11 @@ class SealableQuerySetTests(TestCase):
             instance.sealion.location
         instance = SeaGull.objects.select_related('sealion__location').seal().get()
         self.assertEqual(instance.sealion.location, self.location)
+
+    def test_sealed_select_related_foreign_key_leaker(self):
+        instance = SeaLion.objects.select_related('leak').defer('leak__description').seal().get()
+        with self.assertNumQueries(1):
+            self.assertEqual(instance.leak.description, self.leak.description)
 
     def test_sealed_select_related_deferred_field(self):
         instance = SeaGull.objects.select_related(

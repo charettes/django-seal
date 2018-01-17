@@ -8,10 +8,15 @@ from django.db.models.constants import LOOKUP_SEP
 from django.utils.six import string_types
 
 
-def get_select_related_getters(lookups):
+def get_select_related_getters(lookups, opts):
     """Turn a select_related dict structure into a tree of attribute getters"""
+    from .models import SealableModel
     for lookup, nested_lookups in lookups.items():
-        yield (attrgetter(lookup), tuple(get_select_related_getters(nested_lookups)))
+        field = opts.get_field(lookup)
+        if not issubclass(field.related_model, SealableModel):
+            continue
+        lookup_opts = field.related_model._meta
+        yield (attrgetter(lookup), tuple(get_select_related_getters(nested_lookups, lookup_opts)))
 
 
 def walk_select_relateds(obj, getters):
@@ -42,7 +47,8 @@ class SealedModelIterable(models.query.ModelIterable):
     def __iter__(self):
         select_related = self.queryset.query.select_related
         if select_related:
-            select_related_getters = tuple(get_select_related_getters(self.queryset.query.select_related))
+            opts = self.queryset.model._meta
+            select_related_getters = tuple(get_select_related_getters(self.queryset.query.select_related, opts))
             related_walker = partial(walk_select_relateds, getters=select_related_getters)
             iterator = self._sealed_related_iterator(related_walker)
         else:
