@@ -53,9 +53,7 @@ class SealedModelIterable(models.query.ModelIterable):
 
 
 class SealableQuerySet(models.QuerySet):
-    def __init__(self, *args, **kwargs):
-        self._sealed = False
-        super(SealableQuerySet, self).__init__(*args, **kwargs)
+    _sealed = False
 
     def _clone(self, **kwargs):
         sealed = kwargs.pop('_sealed', False)
