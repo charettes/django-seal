@@ -56,6 +56,15 @@ class SealableModelTests(SimpleTestCase):
         with self.assertRaisesMessage(SealedObject, message):
             instance.sealion_ptr
 
+    def test_sealed_instance_reverse_parent_link_access_sealed(self):
+        instance = GreatSeaLion.from_db(
+            'default', ['id', 'sealion_ptr_id', 'height', 'weight', 'location_id'], [1, 1, 1, 1, 1]
+        )
+        instance.seal()
+        message = "Cannot fetch related field location on a sealed object."
+        with self.assertRaisesMessage(SealedObject, message):
+            instance.sealion_ptr.location
+
     def test_sealed_instance_m2m_access(self):
         instance = SeaLion.from_db('default', ['id'], [1])
         instance.seal()

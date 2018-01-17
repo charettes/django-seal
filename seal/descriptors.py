@@ -43,7 +43,8 @@ class SealableDeferredAttribute(DeferredAttribute):
 
 class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
     def get_object(self, instance):
-        if getattr(instance._state, 'sealed', False):
+        sealed = getattr(instance._state, 'sealed', False)
+        if sealed:
             if self.field.remote_field.parent_link:
                 deferred = instance.get_deferred_fields()
                 # Because it's a parent link, all the data is available in the
@@ -57,7 +58,10 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
                     raise SealedObject('Cannot fetch related field %s on a sealed object.' % self.field.name)
             else:
                 raise SealedObject('Cannot fetch related field %s on a sealed object.' % self.field.name)
-        return super(SealableForwardOneToOneDescriptor, self).get_object(instance)
+        parent = super(SealableForwardOneToOneDescriptor, self).get_object(instance)
+        if parent:
+            parent.seal()
+        return parent
 
 
 class SealableReverseOneToOneDescriptor(ReverseOneToOneDescriptor):
