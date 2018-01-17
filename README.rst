@@ -53,15 +53,15 @@ Usage
     >>> SeaLion.objects.only('height').seal().get().weight
     Traceback (most recent call last)
     ...
-    SealedObject: Cannot fetch deferred field weight on a sealed object.
+    SealedObject: Cannot fetch deferred field weight on sealed SeaLion object.
     >>> SeaLion.objects.seal().get().location
     Traceback (most recent call last)
     ...
-    SealedObject: Cannot fetch related field location on a sealed object.
+    UnsealedAttributeAccess: Cannot fetch related field location on sealed SeaLion object.
     >>> SeaLion.objects.seal().get().previous_locations.all()
     Traceback (most recent call last)
     ...
-    SealedObject: Cannot fetch many-to-many field previous_locations on a sealed object.
+    UnsealedAttributeAccess: Cannot fetch many-to-many field previous_locations on sealed SeaLion object.
 
 Development
 -----------

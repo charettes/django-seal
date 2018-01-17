@@ -1,2 +1,2 @@
-class SealedObject(Exception):
+class UnsealedAttributeAccess(AttributeError):
     pass
