@@ -218,3 +218,11 @@ class SealableQuerySetTests(TestCase):
     def test_improper_usage_raises_error(self):
         with self.assertRaises(AttributeError):
             Koala.objects.only('pk').seal().get()
+
+    def test_sealed_select_related(self):
+        with self.assertRaisesMessage(TypeError, 'Cannot call select_related() after .seal()'):
+            SeaGull.objects.seal().select_related()
+
+    def test_sealed_prefetch_related(self):
+        with self.assertRaisesMessage(TypeError, 'Cannot call prefetch_related() after .seal()'):
+            SeaGull.objects.seal().prefetch_related()

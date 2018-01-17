@@ -99,3 +99,13 @@ class SealableQuerySet(models.QuerySet):
         if issubclass(clone._iterable_class, models.query.ModelIterable):
             clone._iterable_class = SealedModelIterable
         return clone
+
+    def select_related(self, *fields):
+        if self._sealed:
+            raise TypeError('Cannot call select_related() after .seal()')
+        return super(SealableQuerySet, self).select_related(*fields)
+
+    def prefetch_related(self, *lookups):
+        if self._sealed:
+            raise TypeError('Cannot call prefetch_related() after .seal()')
+        return super(SealableQuerySet, self).prefetch_related(*lookups)
