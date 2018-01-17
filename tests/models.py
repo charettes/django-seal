@@ -3,7 +3,6 @@ from django.contrib.contenttypes.fields import (
 )
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from seal.managers import SealableQuerySet
 from seal.models import SealableModel
 
 
@@ -38,13 +37,6 @@ class SealionProxy(SeaLion):
 
 class GreatSeaLion(SeaLion):
     pass
-
-
-class Koala(models.Model):
-    height = models.PositiveIntegerField()
-    weight = models.PositiveIntegerField()
-
-    objects = SealableQuerySet.as_manager()
 
 
 class SeaGull(SealableModel):

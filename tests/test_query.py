@@ -4,7 +4,7 @@ from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import SealedObject
 
-from .models import GreatSeaLion, Koala, Location, Nickname, SeaGull, SeaLion
+from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
 
 
 class SealableQuerySetTests(TestCase):
@@ -12,7 +12,6 @@ class SealableQuerySetTests(TestCase):
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
         cls.great_sealion = GreatSeaLion.objects.create(height=1, weight=100, location=cls.location)
-        cls.koala = Koala.objects.create(height=1, weight=10)
         cls.sealion = cls.great_sealion.sealion_ptr
         cls.sealion.previous_locations.add(cls.location)
         cls.gull = SeaGull.objects.create(sealion=cls.sealion)
@@ -214,10 +213,6 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_prefetched_generic_relation(self):
         instance = SeaGull.objects.prefetch_related('nicknames').seal().get()
         self.assertSequenceEqual(instance.nicknames.all(), [self.nickname])
-
-    def test_improper_usage_raises_error(self):
-        with self.assertRaises(AttributeError):
-            Koala.objects.only('pk').seal().get()
 
     def test_sealed_select_related(self):
         with self.assertRaisesMessage(TypeError, 'Cannot call select_related() after .seal()'):

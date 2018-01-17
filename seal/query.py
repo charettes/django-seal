@@ -53,7 +53,15 @@ class SealedModelIterable(models.query.ModelIterable):
 
 
 class SealableQuerySet(models.QuerySet):
+    _base_manager_class = None
     _sealed = False
+
+    def as_manager(cls):
+        manager = cls._base_manager_class.from_queryset(cls)()
+        manager._built_with_as_manager = True
+        return manager
+    as_manager.queryset_only = True
+    as_manager = classmethod(as_manager)
 
     def _clone(self, **kwargs):
         sealed = kwargs.pop('_sealed', False)

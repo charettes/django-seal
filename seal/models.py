@@ -1,11 +1,35 @@
 from __future__ import unicode_literals
 
+from django.core import checks
 from django.db import models
 from django.db.models.fields.related import lazy_related_operation
 from django.dispatch import receiver
 
 from .descriptors import sealable_descriptor_classes
-from .managers import SealableQuerySet
+from .query import SealableQuerySet
+
+
+class BaseSealableManager(models.manager.BaseManager):
+    def check(self, **kwargs):
+        errors = super(BaseSealableManager, self).check(**kwargs)
+        if not issubclass(self.model, SealableModel):
+            if getattr(self, '_built_with_as_manager', False):
+                origin = '%s.as_manager()' % self._queryset_class.__name__
+            else:
+                origin = self.__class__.__name__
+            errors.append(
+                checks.Error(
+                    '%s can only be used on seal.SealableModel subclasses.' % origin,
+                    id='seal.E001',
+                    hint='Make %s inherit from seal.SealableModel.' % self.model._meta.label,
+                    obj=self,
+                )
+            )
+        return errors
+
+
+SealableQuerySet._base_manager_class = BaseSealableManager
+SealableManager = BaseSealableManager.from_queryset(SealableQuerySet, str('SealableManager'))
 
 
 class SealableModel(models.Model):
@@ -14,7 +38,7 @@ class SealableModel(models.Model):
     would incur a database query into exceptions once sealed.
     """
 
-    objects = SealableQuerySet.as_manager()
+    objects = SealableManager()
 
     class Meta:
         abstract = True

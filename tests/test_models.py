@@ -1,7 +1,12 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
+from django.core import checks
+from django.db import models
 from django.test import SimpleTestCase, TestCase
+from django.test.utils import isolate_apps
 from seal.exceptions import SealedObject
+from seal.models import SealableManager
+from seal.query import SealableQuerySet
 
 from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
 
@@ -99,3 +104,27 @@ class ContentTypesSealableModelTests(TestCase):
         message = "Cannot fetch many-to-many field nicknames on a sealed object."
         with self.assertNumQueries(0), self.assertRaisesMessage(SealedObject, message):
             instance.nicknames.all()
+
+
+class SealableManagerTests(SimpleTestCase):
+    @isolate_apps('tests')
+    def test_non_sealable_model(self):
+        class Foo(models.Model):
+            manager = SealableManager()
+            as_manager = SealableQuerySet.as_manager()
+        self.assertEqual(Foo.manager.check(), [
+            checks.Error(
+                'SealableManager can only be used on seal.SealableModel subclasses.',
+                id='seal.E001',
+                hint='Make tests.Foo inherit from seal.SealableModel.',
+                obj=Foo.manager,
+            )
+        ])
+        self.assertEqual(Foo.as_manager.check(), [
+            checks.Error(
+                'SealableQuerySet.as_manager() can only be used on seal.SealableModel subclasses.',
+                id='seal.E001',
+                hint='Make tests.Foo inherit from seal.SealableModel.',
+                obj=Foo.as_manager,
+            )
+        ])
