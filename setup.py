@@ -5,8 +5,11 @@ from setuptools import find_packages, setup
 
 setup(
     name='django-seal',
-    version='1.0.0rc1',
-    description='Allows queryset and models to be sealed to prevent them from executing queries.',
+    version='1.0.0rc2',
+    description=(
+        'Allows ORM constructs to be sealed to prevent them from executing '
+        'queries on attribute accesses.'
+    ),
     url='https://github.com/charettes/django-seal',
     author='Simon Charette',
     author_email='simon.charette@zapier.com',
