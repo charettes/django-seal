@@ -6,7 +6,9 @@ from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import UnsealedAttributeAccess
 
-from .models import GreatSeaLion, Climate, Leak, Location, Nickname, SeaGull, SeaLion
+from .models import (
+    Climate, GreatSeaLion, Leak, Location, Nickname, SeaGull, SeaLion,
+)
 
 
 class SealableQuerySetTests(TestCase):
@@ -264,7 +266,7 @@ class SealableQuerySetTests(TestCase):
         with self.assertRaisesMessage(TypeError, 'Cannot call prefetch_related() after .seal()'):
             SeaGull.objects.seal().prefetch_related()
 
-    def test_cross_fk_m2m_relations(self):
+    def test_sealed_prefetched_select_related_many_to_many(self):
         instance = SeaLion.objects.select_related(
             'location',
         ).prefetch_related(
