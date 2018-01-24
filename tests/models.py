@@ -2,6 +2,7 @@ from django.contrib.contenttypes.fields import (
     GenericForeignKey, GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
+from django.utils.encoding import python_2_unicode_compatible
 from django.db import models
 from seal.models import SealableModel
 
@@ -27,12 +28,19 @@ class Leak(models.Model):
     description = models.TextField()
 
 
+@python_2_unicode_compatible
 class SeaLion(SealableModel):
     height = models.PositiveIntegerField()
     weight = models.PositiveIntegerField()
     location = models.ForeignKey(Location, models.CASCADE, null=True, related_name='visitors')
     previous_locations = models.ManyToManyField(Location, related_name='previous_visitors')
     leak = models.ForeignKey(Leak, models.CASCADE, null=True)
+
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        return '<SeaLion %s %s %s>' % (self.id, self.height, self.weight)
 
 
 class SeaLionAbstractSubclass(SeaLion):
