@@ -2,8 +2,8 @@ from django.contrib.contenttypes.fields import (
     GenericForeignKey, GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
-from django.utils.encoding import python_2_unicode_compatible
 from django.db import models
+from django.utils.encoding import force_text, python_2_unicode_compatible
 from seal.models import SealableModel
 
 
@@ -37,10 +37,10 @@ class SeaLion(SealableModel):
     leak = models.ForeignKey(Leak, models.CASCADE, null=True)
 
     def __str__(self):
-        return repr(self)
+        return force_text(repr(self))
 
     def __repr__(self):
-        return '<SeaLion %s %s %s>' % (self.id, self.height, self.weight)
+        return str('<SeaLion %s %s %s>' % (self.id, self.height, self.weight))
 
 
 class SeaLionAbstractSubclass(SeaLion):
