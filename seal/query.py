@@ -83,14 +83,20 @@ class SealableQuerySet(models.QuerySet):
         managers and triggering a SealedObject exception.
         """
         if isinstance(prefetch_lookup, string_types):
-            parts = prefetch_lookup.split(LOOKUP_SEP, 1)
-            if len(parts) > 1:
-                head, tail = parts
-            else:
-                head, tail = parts[0], None
-            remote_field = self.model._meta.get_field(head).remote_field
-            if remote_field:
-                queryset = remote_field.model._default_manager.all()
+            parts = prefetch_lookup.split(LOOKUP_SEP)
+            opts = self.model._meta
+            select_related = self.query.select_related or {}
+            # Walk to the first non-select_related part of the prefetch lookup.
+            for index, part in enumerate(parts, start=1):
+                related_model = opts.get_field(part).related_model
+                try:
+                    select_related = select_related[part]
+                except KeyError:
+                    break
+                opts = related_model._meta
+            head, tail = LOOKUP_SEP.join(parts[:index]), LOOKUP_SEP.join(parts[index:])
+            if related_model:
+                queryset = related_model._default_manager.all()
                 if tail:
                     queryset = queryset.prefetch_related(tail)
                 if isinstance(queryset, SealableQuerySet):

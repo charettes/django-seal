@@ -13,9 +13,14 @@ class Nickname(SealableModel):
     content_object = GenericForeignKey('content_type', 'object_id')
 
 
+class Climate(SealableModel):
+    temperature = models.IntegerField()
+
+
 class Location(SealableModel):
     latitude = models.FloatField()
     longitude = models.FloatField()
+    climates = models.ManyToManyField(Climate, blank=True, related_name='locations')
 
 
 class Leak(models.Model):
