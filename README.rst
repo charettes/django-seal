@@ -51,8 +51,8 @@ Usage
     >>> from seal.exceptions import UnsealedAttributeAccess
     >>> warnings.filterwarnings('error', category=UnsealedAttributeAccess)
     >>> location = Location.objects.create(latitude=51.585474, longitude=156.634331)
-    >>> sealion = SeaLion.objects.create(height=1, weight=100, location=cls.location)
-    >>> sealion.previous_locations.add(cls.location)
+    >>> sealion = SeaLion.objects.create(height=1, weight=100, location=location)
+    >>> sealion.previous_locations.add(location)
     >>> SeaLion.objects.only('height').seal().get().weight
     Traceback (most recent call last)
     ...
