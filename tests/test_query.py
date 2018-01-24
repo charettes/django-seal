@@ -6,13 +6,15 @@ from django.db.models import Prefetch
 from django.test import TestCase
 from seal.exceptions import UnsealedAttributeAccess
 
-from .models import GreatSeaLion, Leak, Location, Nickname, SeaGull, SeaLion
+from .models import GreatSeaLion, Climate, Leak, Location, Nickname, SeaGull, SeaLion
 
 
 class SealableQuerySetTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
+        cls.climate = Climate.objects.create(temperature=100)
+        cls.location.climates.add(cls.climate)
         cls.leak = Leak.objects.create(description='Salt water')
         cls.great_sealion = GreatSeaLion.objects.create(
             height=1, weight=100, location=cls.location, leak=cls.leak,
@@ -261,3 +263,11 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_prefetch_related(self):
         with self.assertRaisesMessage(TypeError, 'Cannot call prefetch_related() after .seal()'):
             SeaGull.objects.seal().prefetch_related()
+
+    def test_cross_fk_m2m_relations(self):
+        instance = SeaLion.objects.select_related(
+            'location',
+        ).prefetch_related(
+            'location__climates',
+        ).seal().get()
+        self.assertSequenceEqual(instance.location.climates.all(), [self.climate])
