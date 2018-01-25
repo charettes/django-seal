@@ -69,7 +69,9 @@ class SealableModelTests(SimpleTestCase):
 
     def test_sealed_instance_reverse_parent_link_access_sealed(self):
         instance = GreatSeaLion.from_db(
-            'default', ['id', 'sealion_ptr_id', 'height', 'weight', 'location_id', 'leak_id'], [1, 1, 1, 1, 1, 1]
+            'default',
+            ['id', 'sealion_ptr_id', 'height', 'weight', 'location_id', 'leak_id', 'leak_o2o_id'],
+            [1, 1, 1, 1, 1, 1, 1]
         )
         instance.seal()
         message = "Cannot fetch related field location on sealed <SeaLion instance>"

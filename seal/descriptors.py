@@ -55,11 +55,13 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
     def get_object(self, instance):
         sealed = getattr(instance._state, 'sealed', False)
         if sealed:
-            if self.field.remote_field.parent_link:
+            from .models import SealableModel
+            rel_model = self.field.remote_field.model
+            if self.field.remote_field.parent_link and issubclass(rel_model, SealableModel):
                 deferred = instance.get_deferred_fields()
                 # Because it's a parent link, all the data is available in the
                 # instance, so populate the parent model with this data.
-                rel_model = self.field.remote_field.model
+
                 fields = {field.attname for field in rel_model._meta.concrete_fields}
 
                 # If any of the related model's fields are deferred, prevent
@@ -67,13 +69,18 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
                 if any(field in fields for field in deferred):
                     message = 'Cannot fetch related field %s on sealed %s.' % (self.field.name, _bare_repr(instance))
                     warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
+                else:
+                    # When none of the fields inherited from the parent link
+                    # are deferred ForwardOneToOneDescriptor.get_object() simply
+                    # create an in-memory object from the existing field values.
+                    # Make sure this in-memory instance is sealed as well.
+                    obj = super(SealableForwardOneToOneDescriptor, self).get_object(instance)
+                    obj.seal()
+                    return obj
             else:
                 message = 'Cannot fetch related field %s on sealed %s.' % (self.field.name, _bare_repr(instance))
                 warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
-        parent = super(SealableForwardOneToOneDescriptor, self).get_object(instance)
-        if parent:
-            parent.seal()
-        return parent
+        return super(SealableForwardOneToOneDescriptor, self).get_object(instance)
 
 
 class SealableReverseOneToOneDescriptor(ReverseOneToOneDescriptor):
