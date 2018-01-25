@@ -59,5 +59,5 @@ class GreatSeaLion(SeaLion):
 
 
 class SeaGull(SealableModel):
-    sealion = models.OneToOneField(SeaLion, models.CASCADE, related_name='gull')
+    sealion = models.OneToOneField(SeaLion, models.CASCADE, null=True, related_name='gull')
     nicknames = GenericRelation('Nickname')

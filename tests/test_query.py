@@ -66,6 +66,14 @@ class SealableQuerySetTests(TestCase):
         instance = SeaGull.objects.select_related('sealion__location').seal().get()
         self.assertEqual(instance.sealion.location, self.location)
 
+    def test_sealed_select_related_none_foreign_key(self):
+        SeaLion.objects.update(location=None)
+        instance = SeaLion.objects.select_related('location').seal().get()
+        self.assertIsNone(instance.location)
+        SeaGull.objects.update(sealion=None)
+        instance = SeaGull.objects.select_related('sealion__location').seal().get()
+        self.assertIsNone(instance.sealion)
+
     def test_select_related_foreign_key_leak(self):
         instance = SeaLion.objects.get()
         self.assertEqual(instance.leak.description, self.leak.description)

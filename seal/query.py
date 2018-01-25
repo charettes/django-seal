@@ -23,6 +23,9 @@ def walk_select_relateds(obj, getters):
     """Walk select related of obj from getters."""
     for getter, nested_getters in getters:
         related_obj = getter(obj)
+        if related_obj is None:
+            # We don't need to seal a None relation or any of its children.
+            continue
         yield related_obj
         # yield from walk_select_relateds(related_obj, nested_getters)
         for nested_related_obj in walk_select_relateds(related_obj, nested_getters):
