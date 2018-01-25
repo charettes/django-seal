@@ -34,7 +34,8 @@ class SeaLion(SealableModel):
     weight = models.PositiveIntegerField()
     location = models.ForeignKey(Location, models.CASCADE, null=True, related_name='visitors')
     previous_locations = models.ManyToManyField(Location, related_name='previous_visitors')
-    leak = models.ForeignKey(Leak, models.CASCADE, null=True)
+    leak = models.ForeignKey(Leak, models.CASCADE, null=True, related_name='sealion_just_friends')
+    leak_o2o = models.OneToOneField(Leak, models.CASCADE, null=True, related_name='sealion_soulmate')
 
     def __str__(self):
         return force_text(repr(self))

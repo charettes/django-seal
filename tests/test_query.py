@@ -19,7 +19,7 @@ class SealableQuerySetTests(TestCase):
         cls.location.climates.add(cls.climate)
         cls.leak = Leak.objects.create(description='Salt water')
         cls.great_sealion = GreatSeaLion.objects.create(
-            height=1, weight=100, location=cls.location, leak=cls.leak,
+            height=1, weight=100, location=cls.location, leak=cls.leak, leak_o2o=cls.leak,
         )
         cls.sealion = cls.great_sealion.sealion_ptr
         cls.sealion.previous_locations.add(cls.location)
@@ -66,10 +66,29 @@ class SealableQuerySetTests(TestCase):
         instance = SeaGull.objects.select_related('sealion__location').seal().get()
         self.assertEqual(instance.sealion.location, self.location)
 
-    def test_sealed_select_related_foreign_key_leaker(self):
+    def test_select_related_foreign_key_leak(self):
+        instance = SeaLion.objects.get()
+        self.assertEqual(instance.leak.description, self.leak.description)
+
+        instance = SeaLion.objects.select_related('leak').get()
+        self.assertEqual(instance.leak.description, self.leak.description)
+
+    def test_select_related_foreign_key_leak_o2o(self):
+        instance = SeaLion.objects.get()
+        self.assertEqual(instance.leak_o2o.description, self.leak.description)
+
+        instance = SeaLion.objects.select_related('leak_o2o').get()
+        self.assertEqual(instance.leak_o2o.description, self.leak.description)
+
+    def test_sealed_select_related_foreign_key_leak(self):
         instance = SeaLion.objects.select_related('leak').defer('leak__description').seal().get()
         with self.assertNumQueries(1):
             self.assertEqual(instance.leak.description, self.leak.description)
+
+    def test_sealed_select_related_foreign_key_leak_o2o(self):
+        instance = SeaLion.objects.select_related('leak_o2o').defer('leak_o2o__description').seal().get()
+        with self.assertNumQueries(1):
+            self.assertEqual(instance.leak_o2o.description, self.leak.description)
 
     def test_sealed_select_related_deferred_field(self):
         instance = SeaGull.objects.select_related(
