@@ -336,6 +336,8 @@ class SealableQuerySetNonSealableModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
+        cls.climate = Climate.objects.create(temperature=100)
+        cls.location.climates.add(cls.climate)
         cls.sealion = SeaLion.objects.create(height=1, weight=100, location=cls.location)
 
     @isolate_apps('tests')
@@ -362,3 +364,29 @@ class SealableQuerySetNonSealableModelTests(TestCase):
         instance = queryset.select_related('location').seal().get()
         self.assertTrue(instance._state.sealed)
         self.assertTrue(instance.location._state.sealed)
+
+    @isolate_apps('tests')
+    def test_sealed_prefetch_related_non_sealable_model(self):
+        class NonSealableClimate(models.Model):
+            objects = SealableQuerySet.as_manager()
+
+            class Meta:
+                db_table = Climate._meta.db_table
+
+        class NonSealableLocationClimatesThrough(models.Model):
+            climate = models.ForeignKey(NonSealableClimate, models.CASCADE)
+            location = models.ForeignKey('NonSealableLocation', models.CASCADE)
+
+            class Meta:
+                db_table = Location.climates.through._meta.db_table
+
+        class NonSealableLocation(models.Model):
+            climates = models.ManyToManyField(NonSealableClimate, through=NonSealableLocationClimatesThrough)
+
+            class Meta:
+                db_table = Location._meta.db_table
+        queryset = SealableQuerySet(model=NonSealableLocation)
+        instance = queryset.prefetch_related('climates').seal().get()
+        self.assertTrue(instance._state.sealed)
+        with self.assertNumQueries(0):
+            self.assertTrue(instance.climates.all()[0]._state.sealed)
