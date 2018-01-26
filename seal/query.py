@@ -119,15 +119,16 @@ class SealableQuerySet(models.QuerySet):
                 prefetch_lookup.queryset = prefetch_lookup.queryset.seal()
         return prefetch_lookup
 
-    def seal(self):
+    def seal(self, iterable_class=SealedModelIterable):
         if self._fields is not None:
             raise TypeError('Cannot call seal() after .values() or .values_list()')
+        if not issubclass(iterable_class, SealedModelIterable):
+            raise TypeError('iterable_class %r is not a subclass of SealedModelIterable' % iterable_class)
         clone = self._clone(_sealed=True)
+        clone._iterable_class = iterable_class
         clone._prefetch_related_lookups = tuple(
             self._unsealed_prefetch_lookup(looukp) for looukp in clone._prefetch_related_lookups
         )
-        if issubclass(clone._iterable_class, models.query.ModelIterable):
-            clone._iterable_class = SealedModelIterable
         return clone
 
     def select_related(self, *fields):

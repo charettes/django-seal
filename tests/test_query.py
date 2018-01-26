@@ -3,8 +3,10 @@ import warnings
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
+from django.db.models.query import ModelIterable
 from django.test import SimpleTestCase, TestCase
 from seal.exceptions import UnsealedAttributeAccess
+from seal.query import SealedModelIterable
 
 from .models import (
     Climate, GreatSeaLion, Leak, Location, Nickname, SeaGull, SeaLion,
@@ -310,3 +312,16 @@ class SealableQuerySetInteractionTests(SimpleTestCase):
     def test_values_list_seal_disallowed(self):
         with self.assertRaisesMessage(TypeError, 'Cannot call seal() after .values() or .values_list()'):
             SeaGull.objects.values_list('id').seal()
+
+    def test_seal_sealable_model_iterable_subclass(self):
+        class SealableModelIterableSubclass(SealedModelIterable):
+            pass
+        queryset = SeaGull.objects.seal(iterable_class=SealableModelIterableSubclass)
+        self.assertIs(queryset._iterable_class, SealableModelIterableSubclass)
+
+    def test_seal_non_sealable_model_iterable_subclass(self):
+        message = (
+            "iterable_class <class 'django.db.models.query.ModelIterable'> is not a subclass of SealedModelIterable"
+        )
+        with self.assertRaisesMessage(TypeError, message):
+            SeaGull.objects.seal(iterable_class=ModelIterable)
