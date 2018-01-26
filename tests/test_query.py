@@ -2,11 +2,13 @@ import warnings
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.db.models import Prefetch
 from django.db.models.query import ModelIterable
 from django.test import SimpleTestCase, TestCase
+from django.test.utils import isolate_apps
 from seal.exceptions import UnsealedAttributeAccess
-from seal.query import SealedModelIterable
+from seal.query import SealableQuerySet, SealedModelIterable
 
 from .models import (
     Climate, GreatSeaLion, Leak, Location, Nickname, SeaGull, SeaLion,
@@ -325,3 +327,21 @@ class SealableQuerySetInteractionTests(SimpleTestCase):
         )
         with self.assertRaisesMessage(TypeError, message):
             SeaGull.objects.seal(iterable_class=ModelIterable)
+
+
+class SealableQuerySetNonSealableModelTests(TestCase):
+    """
+    A SealableQuerySet should be usuable on non SealableModel subclasses.
+    """
+    @classmethod
+    def setUpTestData(cls):
+        cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
+
+    @isolate_apps('tests')
+    def test_sealed_non_sealable_model(self):
+        class NonSealableLocation(models.Model):
+            class Meta:
+                db_table = Location._meta.db_table
+        queryset = SealableQuerySet(model=NonSealableLocation)
+        instance = queryset.seal().get()
+        self.assertTrue(instance._state.sealed)

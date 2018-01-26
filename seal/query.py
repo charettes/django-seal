@@ -37,14 +37,14 @@ class SealedModelIterable(models.query.ModelIterable):
         """Iterate over objects and seal them."""
         objs = super(SealedModelIterable, self).__iter__()
         for obj in objs:
-            obj.seal()
+            obj._state.sealed = True
             yield obj
 
     def _sealed_related_iterator(self, related_walker):
         """Iterate over objects and seal them and their select related."""
         for obj in self._sealed_iterator():
             for related_obj in related_walker(obj):
-                related_obj.seal()
+                related_obj._state.sealed = True
             yield obj
 
     def __iter__(self):
