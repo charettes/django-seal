@@ -336,6 +336,7 @@ class SealableQuerySetNonSealableModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.location = Location.objects.create(latitude=51.585474, longitude=156.634331)
+        cls.sealion = SeaLion.objects.create(height=1, weight=100, location=cls.location)
 
     @isolate_apps('tests')
     def test_sealed_non_sealable_model(self):
@@ -345,3 +346,19 @@ class SealableQuerySetNonSealableModelTests(TestCase):
         queryset = SealableQuerySet(model=NonSealableLocation)
         instance = queryset.seal().get()
         self.assertTrue(instance._state.sealed)
+
+    @isolate_apps('tests')
+    def test_sealed_select_related_non_sealable_model(self):
+        class NonSealableLocation(models.Model):
+            class Meta:
+                db_table = Location._meta.db_table
+
+        class NonSealableSeaLion(models.Model):
+            location = models.ForeignKey(NonSealableLocation, models.CASCADE)
+
+            class Meta:
+                db_table = SeaLion._meta.db_table
+        queryset = SealableQuerySet(model=NonSealableSeaLion)
+        instance = queryset.select_related('location').seal().get()
+        self.assertTrue(instance._state.sealed)
+        self.assertTrue(instance.location._state.sealed)

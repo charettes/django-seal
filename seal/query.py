@@ -10,11 +10,8 @@ from django.utils.six import string_types
 
 def get_select_related_getters(lookups, opts):
     """Turn a select_related dict structure into a tree of attribute getters"""
-    from .models import SealableModel
     for lookup, nested_lookups in lookups.items():
         field = opts.get_field(lookup)
-        if not issubclass(field.related_model, SealableModel):
-            continue
         lookup_opts = field.related_model._meta
         yield (attrgetter(lookup), tuple(get_select_related_getters(nested_lookups, lookup_opts)))
 
