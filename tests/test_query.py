@@ -3,7 +3,7 @@ import warnings
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from seal.exceptions import UnsealedAttributeAccess
 
 from .models import (
@@ -285,14 +285,6 @@ class SealableQuerySetTests(TestCase):
         instance = SeaGull.objects.prefetch_related('nicknames').seal().get()
         self.assertSequenceEqual(instance.nicknames.all(), [self.nickname])
 
-    def test_sealed_select_related(self):
-        with self.assertRaisesMessage(TypeError, 'Cannot call select_related() after .seal()'):
-            SeaGull.objects.seal().select_related()
-
-    def test_sealed_prefetch_related(self):
-        with self.assertRaisesMessage(TypeError, 'Cannot call prefetch_related() after .seal()'):
-            SeaGull.objects.seal().prefetch_related()
-
     def test_sealed_prefetched_select_related_many_to_many(self):
         instance = SeaLion.objects.select_related(
             'location',
@@ -300,3 +292,21 @@ class SealableQuerySetTests(TestCase):
             'location__climates',
         ).seal().get()
         self.assertSequenceEqual(instance.location.climates.all(), [self.climate])
+
+
+class SealableQuerySetInteractionTests(SimpleTestCase):
+    def test_sealed_select_related_disallowed(self):
+        with self.assertRaisesMessage(TypeError, 'Cannot call select_related() after .seal()'):
+            SeaGull.objects.seal().select_related()
+
+    def test_sealed_prefetch_related_disallowed(self):
+        with self.assertRaisesMessage(TypeError, 'Cannot call prefetch_related() after .seal()'):
+            SeaGull.objects.seal().prefetch_related()
+
+    def test_values_seal_disallowed(self):
+        with self.assertRaisesMessage(TypeError, 'Cannot call seal() after .values() or .values_list()'):
+            SeaGull.objects.values('id').seal()
+
+    def test_values_list_seal_disallowed(self):
+        with self.assertRaisesMessage(TypeError, 'Cannot call seal() after .values() or .values_list()'):
+            SeaGull.objects.values_list('id').seal()

@@ -120,6 +120,8 @@ class SealableQuerySet(models.QuerySet):
         return prefetch_lookup
 
     def seal(self):
+        if self._fields is not None:
+            raise TypeError('Cannot call seal() after .values() or .values_list()')
         clone = self._clone(_sealed=True)
         clone._prefetch_related_lookups = tuple(
             self._unsealed_prefetch_lookup(looukp) for looukp in clone._prefetch_related_lookups
