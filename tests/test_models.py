@@ -171,3 +171,9 @@ class MakeModelSealableTests(SimpleTestCase):
         self.assertNotIsInstance(Foo.fk_bar, SealableReverseManyToOneDescriptor)
         self.assertNotIsInstance(Foo.o2o_bar, SealableReverseOneToOneDescriptor)
         self.assertNotIsInstance(Foo.m2m_bar, SealableManyToManyDescriptor)
+
+        # Should seal local related objects.
+        make_model_sealable(Foo)
+        self.assertIsInstance(Foo.fk_bar, SealableReverseManyToOneDescriptor)
+        self.assertIsInstance(Foo.o2o_bar, SealableReverseOneToOneDescriptor)
+        self.assertIsInstance(Foo.m2m_bar, SealableManyToManyDescriptor)

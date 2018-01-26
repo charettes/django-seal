@@ -79,6 +79,9 @@ def make_model_sealable(model):
     """
     Replace forward fields descriptors by sealable ones and reverse fields
     descriptors attached to SealableModel subclasses as well.
+
+    This function should be called on a third-party model once all apps are
+    done loading models such as from an AppConfig.ready().
     """
     opts = model._meta
     for field in (opts.local_fields + opts.local_many_to_many + opts.private_fields):
@@ -90,6 +93,12 @@ def make_model_sealable(model):
             lazy_related_operation(
                 make_remote_field_descriptor_sealable, model, remote_field.model, remote_field=remote_field
             )
+    # Non SealableModel subclasses won't have remote fields descriptors
+    # attached to them made sealable so make sure to make locally defined
+    # related objects sealable.
+    if not issubclass(model, SealableModel):
+        for related_object in opts.related_objects:
+            make_descriptor_sealable(model, related_object.get_accessor_name())
 
 
 @receiver(models.signals.class_prepared)
