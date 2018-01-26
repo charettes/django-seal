@@ -6,8 +6,13 @@ from django.core import checks
 from django.db import models
 from django.test import SimpleTestCase, TestCase
 from django.test.utils import isolate_apps
+from seal.descriptors import (
+    SealableDeferredAttribute, SealableForwardManyToOneDescriptor,
+    SealableForwardOneToOneDescriptor, SealableManyToManyDescriptor,
+    SealableReverseManyToOneDescriptor, SealableReverseOneToOneDescriptor,
+)
 from seal.exceptions import UnsealedAttributeAccess
-from seal.models import SealableManager
+from seal.models import SealableManager, make_model_sealable
 from seal.query import SealableQuerySet
 
 from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
@@ -140,3 +145,29 @@ class SealableManagerTests(SimpleTestCase):
                 obj=Foo.as_manager,
             )
         ])
+
+
+class MakeModelSealableTests(SimpleTestCase):
+    @isolate_apps('tests')
+    def test_make_non_sealable_model_subclass(self):
+        class Foo(models.Model):
+            pass
+
+        class Bar(models.Model):
+            foo = models.BooleanField(default=False)
+            fk = models.ForeignKey(Foo, models.CASCADE, related_name='fk_bar')
+            o2o = models.OneToOneField(Foo, models.CASCADE, related_name='o2o_bar')
+            m2m = models.ManyToManyField(Foo, related_name='m2m_bar')
+
+        make_model_sealable(Bar)
+
+        # Forward fields descriptors should have been made sealable.
+        self.assertIsInstance(Bar.foo, SealableDeferredAttribute)
+        self.assertIsInstance(Bar.fk, SealableForwardManyToOneDescriptor)
+        self.assertIsInstance(Bar.o2o, SealableForwardOneToOneDescriptor)
+        self.assertIsInstance(Bar.m2m, SealableManyToManyDescriptor)
+
+        # But not the remote fields.
+        self.assertNotIsInstance(Foo.fk_bar, SealableReverseManyToOneDescriptor)
+        self.assertNotIsInstance(Foo.o2o_bar, SealableReverseOneToOneDescriptor)
+        self.assertNotIsInstance(Foo.m2m_bar, SealableManyToManyDescriptor)

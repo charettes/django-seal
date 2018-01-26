@@ -75,23 +75,31 @@ def make_remote_field_descriptor_sealable(model, related_model, remote_field):
     make_descriptor_sealable(related_model, accessor_name)
 
 
-@receiver(models.signals.class_prepared)
-def make_field_descriptors_sealable(sender, **kwargs):
+def make_model_sealable(model):
     """
-    Replace SealableModel subclasses forward and reverse fields descriptors
-    by sealable ones.
+    Replace forward fields descriptors by sealable ones and reverse fields
+    descriptors attached to SealableModel subclasses as well.
+    """
+    opts = model._meta
+    for field in (opts.local_fields + opts.local_many_to_many + opts.private_fields):
+        make_descriptor_sealable(model, field.name)
+        remote_field = field.remote_field
+        if remote_field:
+            # Use lazy_related_operation because lazy relationships might not
+            # be resolved yet.
+            lazy_related_operation(
+                make_remote_field_descriptor_sealable, model, remote_field.model, remote_field=remote_field
+            )
+
+
+@receiver(models.signals.class_prepared)
+def _make_field_descriptors_sealable(sender, **kwargs):
+    """
+    Automatically make concrete SealableModel subclasses fields sealable.
     """
     if not issubclass(sender, SealableModel):
         return
     opts = sender._meta
     if opts.abstract or opts.proxy:
         return
-    for field in (opts.local_fields + opts.local_many_to_many + opts.private_fields):
-        make_descriptor_sealable(sender, field.name)
-        remote_field = field.remote_field
-        if remote_field:
-            # Use lazy_related_operation because lazy relationships might not
-            # be resolved yet.
-            lazy_related_operation(
-                make_remote_field_descriptor_sealable, sender, remote_field.model, remote_field=remote_field
-            )
+    make_model_sealable(sender)
