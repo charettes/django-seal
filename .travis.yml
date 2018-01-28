@@ -1,48 +1,37 @@
 dist: trusty
-sudo: no
-
+sudo: false
 language: python
-
 env:
-  - TOXENV=flake8
-  - TOXENV=isort
-
+- TOXENV=flake8
+- TOXENV=isort
 cache: pip
-
 matrix:
   fast_finish: true
   include:
-    - python: 2.7
-      env: TOXENV=py27-1.11
-
-    - python: 3.4
-      env: TOXENV=py34-1.11
-    - python: 3.4
-      env: TOXENV=py34-2.0
-
-    - python: 3.5
-      env: TOXENV=py35-1.11
-    - python: 3.5
-      env: TOXENV=py35-2.0
-    - python: 3.5
-      env: TOXENV=py35-master
-
-    - python: 3.6
-      env: TOXENV=py36-1.11
-    - python: 3.6
-      env: TOXENV=py36-2.0
-    - python: 3.6
-      env: TOXENV=py36-master
-
+  - python: 2.7
+    env: TOXENV=py27-1.11
+  - python: 3.4
+    env: TOXENV=py34-1.11
+  - python: 3.4
+    env: TOXENV=py34-2.0
+  - python: 3.5
+    env: TOXENV=py35-1.11
+  - python: 3.5
+    env: TOXENV=py35-2.0
+  - python: 3.5
+    env: TOXENV=py35-master
+  - python: 3.6
+    env: TOXENV=py36-1.11
+  - python: 3.6
+    env: TOXENV=py36-2.0
+  - python: 3.6
+    env: TOXENV=py36-master
   allow_failures:
-    - env: TOXENV=py35-master
-    - env: TOXENV=py36-master
-
+  - env: TOXENV=py35-master
+  - env: TOXENV=py36-master
 install:
-  - pip install tox coveralls
-
+- pip install tox coveralls
 script:
-  - tox
-
+- tox
 after_success:
-  - if [ -f .coverage ]; then coveralls; fi
+- if [ -f .coverage ]; then coveralls; fi
