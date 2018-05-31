@@ -126,6 +126,15 @@ class SealableQuerySetTests(TestCase):
         instance = SeaGull.objects.select_related('sealion').seal().get()
         self.assertEqual(instance.sealion, self.sealion)
 
+    def test_sealed_select_related_reverse_one_to_one(self):
+        instance = SeaLion.objects.select_related('gull').seal().get()
+        self.assertEqual(instance.gull, self.gull)
+        self.gull.sealion = None
+        self.gull.save(update_fields={'sealion'})
+        instance = SeaLion.objects.select_related('gull').seal().get()
+        with self.assertRaises(SeaLion.gull.RelatedObjectDoesNotExist):
+            instance.gull
+
     def test_sealed_many_to_many(self):
         instance = SeaLion.objects.seal().get()
         message = 'Cannot fetch many-to-many field previous_locations on sealed <SeaLion instance>'
