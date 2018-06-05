@@ -139,7 +139,11 @@ class SealableQuerySetTests(TestCase):
         instance = SeaLion.objects.seal().get()
         message = 'Cannot fetch many-to-many field previous_locations on sealed <SeaLion instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_locations.all()
+            list(instance.previous_locations.all())
+
+    def test_sealed_many_to_many_queryset(self):
+        instance = SeaLion.objects.seal().get()
+        self.assertEqual(instance.previous_locations.get(pk=self.location.pk), self.location)
 
     def test_not_sealed_many_to_many(self):
         instance = SeaLion.objects.get()
@@ -152,7 +156,7 @@ class SealableQuerySetTests(TestCase):
         instance = instance.previous_locations.all()[0]
         message = 'Cannot fetch many-to-many field previous_visitors on sealed <Location instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_visitors.all()
+            list(instance.previous_visitors.all())
 
     def test_sealed_prefetch_prefetched_many_to_many(self):
         instance = SeaLion.objects.prefetch_related(
@@ -163,7 +167,7 @@ class SealableQuerySetTests(TestCase):
         instance = instance.previous_locations.all()[0]
         message = 'Cannot fetch many-to-many field previous_visitors on sealed <Location instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_visitors.all()
+            list(instance.previous_visitors.all())
 
     def test_sealed_prefetch_queryset_prefetched_many_to_many(self):
         instance = SeaLion.objects.prefetch_related(
@@ -174,7 +178,7 @@ class SealableQuerySetTests(TestCase):
         instance = instance.previous_locations.all()[0]
         message = 'Cannot fetch many-to-many field previous_visitors on sealed <Location instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_visitors.all()
+            list(instance.previous_visitors.all())
 
     def test_sealed_string_prefetched_nested_many_to_many(self):
         instance = SeaLion.objects.prefetch_related('previous_locations__previous_visitors').seal().get()
@@ -186,7 +190,7 @@ class SealableQuerySetTests(TestCase):
         instance = instance.previous_locations.all()[0].previous_visitors.all()[0]
         message = 'Cannot fetch many-to-many field previous_locations on sealed <SeaLion instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_locations.all()
+            list(instance.previous_locations.all())
 
     def test_sealed_prefetch_prefetched_nested_many_to_many(self):
         instance = SeaLion.objects.prefetch_related(
@@ -200,7 +204,7 @@ class SealableQuerySetTests(TestCase):
         instance = instance.previous_locations.all()[0].previous_visitors.all()[0]
         message = 'Cannot fetch many-to-many field previous_locations on sealed <SeaLion instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_locations.all()
+            list(instance.previous_locations.all())
 
     def test_prefetched_sealed_many_to_many(self):
         instance = SeaLion.objects.prefetch_related(
@@ -210,7 +214,7 @@ class SealableQuerySetTests(TestCase):
             self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
         message = 'Cannot fetch many-to-many field previous_visitors on sealed <Location instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_locations.all()[0].previous_visitors.all()
+            list(instance.previous_locations.all()[0].previous_visitors.all())
 
     def test_sealed_deferred_parent_link(self):
         instance = GreatSeaLion.objects.only('pk').seal().get()
@@ -246,7 +250,7 @@ class SealableQuerySetTests(TestCase):
         instance = Location.objects.seal().get()
         message = 'Cannot fetch many-to-many field visitors on sealed <Location instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.visitors.all()
+            list(instance.visitors.all())
 
     def test_not_sealed_reverse_foreign_key(self):
         instance = Location.objects.get()
@@ -274,7 +278,11 @@ class SealableQuerySetTests(TestCase):
         instance = Location.objects.seal().get()
         message = 'Cannot fetch many-to-many field previous_visitors on sealed <Location instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_visitors.all()
+            list(instance.previous_visitors.all())
+
+    def test_sealed_reverse_many_to_many_queryset(self):
+        instance = Location.objects.seal().get()
+        self.assertEqual(instance.previous_visitors.get(pk=self.sealion.pk), self.sealion)
 
     def test_not_reverse_sealed_many_to_many(self):
         instance = Location.objects.get()
@@ -288,7 +296,7 @@ class SealableQuerySetTests(TestCase):
         instance = SeaGull.objects.seal().get()
         message = 'Cannot fetch many-to-many field nicknames on sealed <SeaGull instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.nicknames.all()
+            list(instance.nicknames.all())
 
     def test_not_sealed_generic_relation(self):
         instance = SeaGull.objects.get()

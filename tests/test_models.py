@@ -41,8 +41,9 @@ class SealableModelTests(SimpleTestCase):
         instance = Location.from_db('default', ['id'], [1])
         instance.seal()
         message = "Cannot fetch many-to-many field visitors on sealed <Location instance>"
+        visitors = instance.visitors.all()
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.visitors.all()
+            list(visitors)
 
     def test_sealed_instance_one_to_one_access(self):
         instance = SeaGull.from_db('default', ['id', 'sealion_id'], [1, 1])
@@ -87,15 +88,17 @@ class SealableModelTests(SimpleTestCase):
         instance = SeaLion.from_db('default', ['id'], [1])
         instance.seal()
         message = "Cannot fetch many-to-many field previous_locations on sealed <SeaLion instance>"
+        previous_locations = instance.previous_locations.all()
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_locations.all()
+            list(previous_locations)
 
     def test_sealed_instance_reverse_m2m_access(self):
         instance = Location.from_db('default', ['id'], [1])
         instance.seal()
         message = "Cannot fetch many-to-many field previous_visitors on sealed <Location instance>"
+        previous_visitors = instance.previous_visitors.all()
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.previous_visitors.all()
+            list(previous_visitors)
 
 
 class ContentTypesSealableModelTests(TestCase):
@@ -119,8 +122,9 @@ class ContentTypesSealableModelTests(TestCase):
         instance = SeaGull.from_db('default', ['id'], [1])
         instance.seal()
         message = "Cannot fetch many-to-many field nicknames on sealed <SeaGull instance>"
+        nicknames = instance.nicknames.all()
         with self.assertNumQueries(0), self.assertRaisesMessage(UnsealedAttributeAccess, message):
-            instance.nicknames.all()
+            list(nicknames)
 
 
 class SealableManagerTests(SimpleTestCase):

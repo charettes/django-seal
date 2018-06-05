@@ -5,6 +5,7 @@ import warnings
 from django.contrib.contenttypes.fields import (
     GenericForeignKey, ReverseGenericManyToOneDescriptor,
 )
+from django.db.models import QuerySet
 from django.db.models.fields import DeferredAttribute
 from django.db.models.fields.related import (
     ForwardManyToOneDescriptor, ForwardOneToOneDescriptor,
@@ -12,12 +13,48 @@ from django.db.models.fields.related import (
     ReverseOneToOneDescriptor,
 )
 from django.utils.functional import cached_property
+from django.utils.lru_cache import lru_cache
 
 from .exceptions import UnsealedAttributeAccess
 
 
 def _bare_repr(instance):
     return '<%s instance>' % instance.__class__.__name__
+
+
+class SealedRelatedQuerySet(QuerySet):
+    """
+    QuerySet that prevents any fetching from taking place on its current form.
+
+    As soon as the query is cloned it gets unsealed.
+    """
+    def _clone(self, *args, **kwargs):
+        clone = super(SealedRelatedQuerySet, self)._clone(*args, **kwargs)
+        clone.__class__ = self.__class__.__mro__[1]
+        return clone
+
+    def _fetch_all(self):
+        if self._result_cache is None:
+            warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=3)
+        super(SealedRelatedQuerySet, self)._fetch_all()
+
+
+@lru_cache(maxsize=100)
+def _sealed_related_queryset_type_factory(queryset_cls):
+    if issubclass(queryset_cls, SealedRelatedQuerySet):
+        return queryset_cls
+    return type(
+        str('Sealed%s' % queryset_cls.__name__), (SealedRelatedQuerySet, queryset_cls), {},
+    )
+
+
+def seal_related_queryset(queryset, warning):
+    """
+    Seal a related queryset to prevent it from being fetched directly.
+    """
+    queryset.__class__ = _sealed_related_queryset_type_factory(queryset.__class__)
+    queryset._sealed_warning = warning
+    return queryset
 
 
 def create_sealable_related_manager(related_manager_cls, field_name):
@@ -31,10 +68,11 @@ def create_sealable_related_manager(related_manager_cls, field_name):
                 try:
                     return self.instance._prefetched_objects_cache[prefetch_cache_name]
                 except (AttributeError, KeyError):
-                    message = 'Cannot fetch many-to-many field %s on sealed %s.' % (
+                    warning = 'Cannot fetch many-to-many field %s on sealed %s.' % (
                         field_name, _bare_repr(self.instance),
                     )
-                    warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
+                    related_queryset = super(SealableRelatedManager, self).get_queryset()
+                    return seal_related_queryset(related_queryset, warning)
             return super(SealableRelatedManager, self).get_queryset()
     return SealableRelatedManager
 
