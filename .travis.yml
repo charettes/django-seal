@@ -1,5 +1,5 @@
-dist: trusty
-sudo: false
+dist: xenial
+sudo: true
 language: python
 env:
 - TOXENV=flake8
@@ -30,16 +30,10 @@ matrix:
     env: TOXENV=py36-master
   - python: 3.7
     env: TOXENV=py37-2.0
-    dist: xenial
-    sudo: true
   - python: 3.7
     env: TOXENV=py37-2.1
-    dist: xenial
-    sudo: true
   - python: 3.7
     env: TOXENV=py37-master
-    dist: xenial
-    sudo: true
   allow_failures:
   - env: TOXENV=py36-master
   - env: TOXENV=py37-master
