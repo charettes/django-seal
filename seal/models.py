@@ -9,7 +9,7 @@ from .descriptors import sealable_descriptor_classes
 from .query import SealableQuerySet
 
 
-class BaseSealableManager(models.manager.BaseManager):
+class BaseSealableManager(models.manager.Manager):
     def check(self, **kwargs):
         errors = super(BaseSealableManager, self).check(**kwargs)
         if not issubclass(self.model, SealableModel):

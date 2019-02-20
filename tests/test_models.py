@@ -128,6 +128,11 @@ class ContentTypesSealableModelTests(TestCase):
 
 
 class SealableManagerTests(SimpleTestCase):
+    def test_isinstance_manager(self):
+        """Manager classes are subclasses of Manager as many third-party apps expect."""
+        self.assertIsInstance(SealableManager(), models.Manager)
+        self.assertIsInstance(SealableQuerySet.as_manager(), models.Manager)
+
     @isolate_apps('tests')
     def test_non_sealable_model(self):
         class Foo(models.Model):
