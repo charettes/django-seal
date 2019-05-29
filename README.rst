@@ -45,14 +45,28 @@ Usage
         location = models.ForeignKey(Location, models.CASCADE, null=True)
         previous_locations = models.ManyToManyField(Location, related_name='previous_visitors')
 
+By default ``UnsealedAttributeAccess`` warnings will be raised on sealed objects attributes accesses
+
+.. code:: python
+
+    >>> location = Location.objects.create(latitude=51.585474, longitude=156.634331)
+    >>> sealion = SeaLion.objects.create(height=1, weight=100, location=location)
+    >>> sealion.previous_locations.add(location)
+    >>> SeaLion.objects.only('height').seal().get().weight
+    UnsealedAttributeAccess:: Attempt to fetch deferred field "weight" on sealed <SeaLion instance>.
+    >>> SeaLion.objects.seal().get().location
+    UnsealedAttributeAccess: Attempt to fetch related field "location" on sealed <SeaLion instance>.
+    >>> SeaLion.objects.seal().get().previous_locations.all()
+    UnsealedAttributeAccess: Attempt to fetch many-to-many field "previous_locations" on sealed <SeaLion instance>.
+
+You can `elevate the warnings to exceptions by filtering them`_. This is useful to assert no unsealed attribute accesses are
+performed when running your test suite for example.
+
 .. code:: python
 
     >>> import warnings
     >>> from seal.exceptions import UnsealedAttributeAccess
     >>> warnings.filterwarnings('error', category=UnsealedAttributeAccess)
-    >>> location = Location.objects.create(latitude=51.585474, longitude=156.634331)
-    >>> sealion = SeaLion.objects.create(height=1, weight=100, location=location)
-    >>> sealion.previous_locations.add(location)
     >>> SeaLion.objects.only('height').seal().get().weight
     Traceback (most recent call last)
     ...
@@ -65,6 +79,18 @@ Usage
     Traceback (most recent call last)
     ...
     UnsealedAttributeAccess: Attempt to fetch many-to-many field "previous_locations" on sealed <SeaLion instance>.
+
+Or you can `configure logging to capture warnings`_ to log unsealed attribute accesses to the ``py.warnings`` logger which is a
+nice way to identify and address unsealed attributes accesses from production logs without taking your application down if some
+instances happen to slip through your battery of tests.
+
+.. code:: python
+
+    >>> import logging
+    >>> logging.captureWarnings()
+
+.. _elevate the warnings to exceptions by filtering them: https://docs.python.org/3/library/warnings.html#warnings.filterwarnings
+.. _configure logging to capture warnings: https://docs.python.org/3/library/logging.html#logging.captureWarnings
 
 Development
 -----------
