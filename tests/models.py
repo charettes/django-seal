@@ -3,9 +3,15 @@ from django.contrib.contenttypes.fields import (
 )
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils.encoding import force_text, python_2_unicode_compatible
+from django.utils.encoding import force_text
 
 from seal.models import SealableModel
+
+try:
+    from django.utils.encoding import python_2_unicode_compatible
+except ImportError:
+    def python_2_unicode_compatible(cls):
+        return cls
 
 
 class Nickname(SealableModel):

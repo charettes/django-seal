@@ -13,9 +13,13 @@ from django.db.models.fields.related import (
     ReverseOneToOneDescriptor,
 )
 from django.utils.functional import cached_property
-from django.utils.lru_cache import lru_cache
 
 from .exceptions import UnsealedAttributeAccess
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from django.utils.lru_cache import lru_cache
 
 
 def _bare_repr(instance):

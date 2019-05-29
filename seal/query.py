@@ -6,13 +6,17 @@ from operator import attrgetter
 import django
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
-from django.utils.six import string_types
 
 if django.VERSION >= (2, 0):
     cached_value_getter = attrgetter('get_cached_value')
 else:
     def cached_value_getter(field):
         return attrgetter(field.get_cache_name())
+
+try:
+    from django.utils.six import string_types
+except ImportError:
+    string_types = str,
 
 
 def get_select_related_getters(lookups, opts):
