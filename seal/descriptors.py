@@ -68,7 +68,7 @@ def create_sealable_related_manager(related_manager_cls, field_name):
                 try:
                     return self.instance._prefetched_objects_cache[prefetch_cache_name]
                 except (AttributeError, KeyError):
-                    warning = 'Cannot fetch many-to-many field %s on sealed %s.' % (
+                    warning = 'Attempt to fetch many-to-many field "%s" on sealed %s.' % (
                         field_name, _bare_repr(self.instance),
                     )
                     related_queryset = super(SealableRelatedManager, self).get_queryset()
@@ -84,7 +84,7 @@ class SealableDeferredAttribute(DeferredAttribute):
         if (getattr(instance._state, 'sealed', False) and
             instance.__dict__.get(self.field_name, self) is self and
                 self._check_parent_chain(instance, self.field_name) is None):
-            message = 'Cannot fetch deferred field %s on sealed %s.' % (self.field_name, _bare_repr(instance))
+            message = 'Attempt to fetch deferred field "%s" on sealed %s.' % (self.field_name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
         return super(SealableDeferredAttribute, self).__get__(instance, cls)
 
@@ -105,7 +105,9 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
                 # If any of the related model's fields are deferred, prevent
                 # the query from being performed.
                 if any(field in fields for field in deferred):
-                    message = 'Cannot fetch related field %s on sealed %s.' % (self.field.name, _bare_repr(instance))
+                    message = 'Attempt to fetch related field "%s" on sealed %s.' % (
+                        self.field.name, _bare_repr(instance)
+                    )
                     warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
                 else:
                     # When none of the fields inherited from the parent link
@@ -116,7 +118,7 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
                     obj.seal()
                     return obj
             else:
-                message = 'Cannot fetch related field %s on sealed %s.' % (self.field.name, _bare_repr(instance))
+                message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.field.name, _bare_repr(instance))
                 warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super(SealableForwardOneToOneDescriptor, self).get_object(instance)
 
@@ -124,7 +126,7 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
 class SealableReverseOneToOneDescriptor(ReverseOneToOneDescriptor):
     def get_queryset(self, instance, **hints):
         if getattr(instance._state, 'sealed', False):
-            message = 'Cannot fetch related field %s on sealed %s.' % (self.related.name, _bare_repr(instance))
+            message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.related.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super(SealableReverseOneToOneDescriptor, self).get_queryset(instance=instance, **hints)
 
@@ -132,7 +134,7 @@ class SealableReverseOneToOneDescriptor(ReverseOneToOneDescriptor):
 class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
     def get_object(self, instance):
         if getattr(instance._state, 'sealed', False):
-            message = 'Cannot fetch related field %s on sealed %s.' % (self.field.name, _bare_repr(instance))
+            message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.field.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super(SealableForwardManyToOneDescriptor, self).get_object(instance)
 
@@ -158,7 +160,7 @@ class SealableGenericForeignKey(GenericForeignKey):
             return self
 
         if getattr(instance._state, 'sealed', False) and not self.is_cached(instance):
-            message = 'Cannot fetch related field %s on sealed %s.' % (self.name, _bare_repr(instance))
+            message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
 
         return super(SealableGenericForeignKey, self).__get__(instance, cls=cls)
