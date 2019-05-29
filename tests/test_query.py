@@ -7,6 +7,7 @@ from django.db.models import Prefetch
 from django.db.models.query import ModelIterable
 from django.test import SimpleTestCase, TestCase
 from django.test.utils import isolate_apps
+
 from seal.exceptions import UnsealedAttributeAccess
 from seal.query import SealableQuerySet, SealedModelIterable
 

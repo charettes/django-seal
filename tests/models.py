@@ -4,6 +4,7 @@ from django.contrib.contenttypes.fields import (
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.encoding import force_text, python_2_unicode_compatible
+
 from seal.models import SealableModel
 
 

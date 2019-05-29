@@ -6,6 +6,7 @@ from django.core import checks
 from django.db import models
 from django.test import SimpleTestCase, TestCase
 from django.test.utils import isolate_apps
+
 from seal.descriptors import (
     SealableDeferredAttribute, SealableForwardManyToOneDescriptor,
     SealableForwardOneToOneDescriptor, SealableManyToManyDescriptor,
