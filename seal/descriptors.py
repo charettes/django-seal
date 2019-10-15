@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import warnings
 
+import django
 from django.contrib.contenttypes.fields import (
     GenericForeignKey, ReverseGenericManyToOneDescriptor,
 )
@@ -82,6 +83,14 @@ def create_sealable_related_manager(related_manager_cls, field_name):
 
 
 class SealableDeferredAttribute(DeferredAttribute):
+    if django.VERSION >= (3, 0, 0):
+        @cached_property
+        def field_name(self):
+            return self.field.attname
+
+        def _check_parent_chain(self, instance, field_name=None):
+            super(SealableDeferredAttribute, self)._check_parent_chain(instance)
+
     def __get__(self, instance, cls=None):
         if instance is None:
             return self
