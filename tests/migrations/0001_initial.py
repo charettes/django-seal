@@ -194,4 +194,25 @@ class Migration(migrations.Migration):
             options={'proxy': True, 'indexes': []},
             bases=('tests.sealion',),
         ),
+        migrations.CreateModel(
+            name='Island',
+            fields=[
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'location',
+                    models.ForeignKey(
+                        to='tests.Location',
+                        on_delete=django.db.models.deletion.CASCADE,
+                    ),
+                )
+            ],
+        ),
     ]
