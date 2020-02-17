@@ -12,7 +12,7 @@ from seal.exceptions import UnsealedAttributeAccess
 from seal.query import SealableQuerySet, SealedModelIterable
 
 from .models import (
-    Climate, GreatSeaLion, Leak, Location, Nickname, SeaGull, SeaLion,
+    Climate, GreatSeaLion, Island, Leak, Location, Nickname, SeaGull, SeaLion,
 )
 
 
@@ -314,6 +314,11 @@ class SealableQuerySetTests(TestCase):
             'location__climates',
         ).seal().get()
         self.assertSequenceEqual(instance.location.climates.all(), [self.climate])
+
+    def test_prefetch_without_related_name(self):
+        island = Island.objects.create(location=self.location)
+        location = Location.objects.prefetch_related('island_set').seal().get()
+        self.assertSequenceEqual(location.island_set.all(), [island])
 
 
 class SealableQuerySetInteractionTests(SimpleTestCase):

@@ -4,6 +4,7 @@ from functools import partial
 from operator import attrgetter
 
 import django
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
 
@@ -99,7 +100,11 @@ class SealableQuerySet(models.QuerySet):
             select_related = self.query.select_related or {}
             # Walk to the first non-select_related part of the prefetch lookup.
             for index, part in enumerate(parts, start=1):
-                related_model = opts.get_field(part).related_model
+                try:
+                    relation = opts.get_field(part)
+                except FieldDoesNotExist:
+                    relation = getattr(opts.model, part).rel
+                related_model = relation.related_model
                 try:
                     select_related = select_related[part]
                 except KeyError:

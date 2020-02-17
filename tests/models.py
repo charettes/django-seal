@@ -31,6 +31,11 @@ class Location(SealableModel):
     climates = models.ManyToManyField(Climate, blank=True, related_name='locations')
 
 
+class Island(models.Model):
+    # Explicitly avoid setting a related_name.
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+
+
 class Leak(models.Model):
     description = models.TextField()
 
