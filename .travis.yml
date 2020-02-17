@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 sudo: false
 language: python
 cache: pip
@@ -8,6 +8,7 @@ python:
   - 3.5
   - 3.6
   - 3.7
+  - 3.8
 stages:
   - lint
   - test
