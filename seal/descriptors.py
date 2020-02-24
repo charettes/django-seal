@@ -27,29 +27,29 @@ def _bare_repr(instance):
     return '<%s instance>' % instance.__class__.__name__
 
 
-class SealedRelatedQuerySet(QuerySet):
+class _SealedRelatedQuerySet(QuerySet):
     """
     QuerySet that prevents any fetching from taking place on its current form.
 
     As soon as the query is cloned it gets unsealed.
     """
     def _clone(self, *args, **kwargs):
-        clone = super(SealedRelatedQuerySet, self)._clone(*args, **kwargs)
+        clone = super(_SealedRelatedQuerySet, self)._clone(*args, **kwargs)
         clone.__class__ = self.__class__.__mro__[1]
         return clone
 
     def _fetch_all(self):
         if self._result_cache is None:
             warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=3)
-        super(SealedRelatedQuerySet, self)._fetch_all()
+        super(_SealedRelatedQuerySet, self)._fetch_all()
 
 
 @lru_cache(maxsize=100)
 def _sealed_related_queryset_type_factory(queryset_cls):
-    if issubclass(queryset_cls, SealedRelatedQuerySet):
+    if issubclass(queryset_cls, _SealedRelatedQuerySet):
         return queryset_cls
     return type(
-        str('Sealed%s' % queryset_cls.__name__), (SealedRelatedQuerySet, queryset_cls), {},
+        str('Sealed%s' % queryset_cls.__name__), (_SealedRelatedQuerySet, queryset_cls), {},
     )
 
 
