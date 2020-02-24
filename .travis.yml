@@ -20,11 +20,14 @@ jobs:
       if: tag IS present
       python: 2.7
       deploy:
+        skip_existing: true
         provider: pypi
         user: charettes
         distributions: sdist bdist_wheel
         password:
           secure: P3/8C47HKEp0iQohltLjgFIK9jPGt5ZTeyNU9ayRa9J3C3yWgKGLJrTYNsxhoTT60ZGkLuOnpNioIDwZ3oBjm6OrONYZZ7xwXPxPaHa/Uxu91Bqkb/0IMSXWAKnjGCvE8DtDaDkBEOd52wyVinrR2YLp11oJR/cVUikFVFHpSBrxEl5SxgaulL61R4EmEVT1Y7y+dO5XqOBygb8/n2HWaCXw8Jd/gxgG/vYQy5zOC8S1sbRU6zR4DnpkDTDbLskuIDL/MySh8k793S/vqRWXeXMw8XGu6b5E3z69Yr7fB1UqUkwbr/GWnfkkjUyRxP8q8xk/5pvoJ1IUpLM9yFQTrOHtoJfFGaFpb/7kwuWdePL2+y5Er3YqNInrTvDg0yEyvGMPBLxv7D+tfpnNYoCvwfvspFkXLwl1w3CbM57FkPezHboEY+CPHWis1UnDNk/0g4Yn72NFcMcBHmnGOARrBXWEx345IU7QqJsFucFoYFLZHnYayiGu2S43j9UNk+2/5PUBve6Z0yQ5VKq4Obme9DS3LN3pbcBAoSpo5zszs2/xUaRO9KZ/7a6GScWCB9tmwFvfmsg5XAQQLD+aC49ZTjeFa3DeY/zufnah69eZgGcM1OKS8jOQrv9h5nAFvExV+gldAtVbC5FgEYTPn06E3oB0J3IMBqXEts5f9xzQSj0=
+        on:
+          tags: true
 
 install:
 - pip install tox coveralls tox-travis
