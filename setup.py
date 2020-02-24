@@ -3,6 +3,9 @@ from __future__ import unicode_literals
 
 from setuptools import find_packages, setup
 
+with open('README.rst') as file_:
+    long_description = file_.read()
+
 setup(
     name='django-seal',
     version='1.2.3a0',
@@ -10,6 +13,7 @@ setup(
         'Allows ORM constructs to be sealed to prevent them from executing '
         'queries on attribute accesses.'
     ),
+    long_description=long_description,
     url='https://github.com/charettes/django-seal',
     author='Simon Charette',
     author_email='simon.charette@zapier.com',
