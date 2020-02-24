@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='django-seal',
-    version='1.2.2',
+    version='1.2.3a0',
     description=(
         'Allows ORM constructs to be sealed to prevent them from executing '
         'queries on attribute accesses.'
