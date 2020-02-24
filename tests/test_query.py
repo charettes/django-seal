@@ -8,6 +8,7 @@ from django.db.models.query import ModelIterable
 from django.test import SimpleTestCase, TestCase
 from django.test.utils import isolate_apps
 
+from seal.descriptors import _SealedRelatedQuerySet
 from seal.exceptions import UnsealedAttributeAccess
 from seal.query import SealableQuerySet, SealedModelIterable
 
@@ -145,6 +146,9 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_many_to_many_queryset(self):
         instance = SeaLion.objects.seal().get()
         self.assertEqual(instance.previous_locations.get(pk=self.location.pk), self.location)
+        self.assertFalse(
+            isinstance(instance.previous_locations.filter(pk=self.location.pk), _SealedRelatedQuerySet)
+        )
 
     def test_not_sealed_many_to_many(self):
         instance = SeaLion.objects.get()
@@ -284,6 +288,9 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_reverse_many_to_many_queryset(self):
         instance = Location.objects.seal().get()
         self.assertEqual(instance.previous_visitors.get(pk=self.sealion.pk), self.sealion)
+        self.assertFalse(
+            isinstance(instance.previous_visitors.filter(pk=self.sealion.pk), _SealedRelatedQuerySet)
+        )
 
     def test_not_reverse_sealed_many_to_many(self):
         instance = Location.objects.get()

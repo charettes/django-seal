@@ -35,7 +35,7 @@ class _SealedRelatedQuerySet(QuerySet):
     """
     def _clone(self, *args, **kwargs):
         clone = super(_SealedRelatedQuerySet, self)._clone(*args, **kwargs)
-        clone.__class__ = self.__class__.__mro__[1]
+        clone.__class__ = self._unsealed_class
         return clone
 
     def _fetch_all(self):
@@ -49,7 +49,9 @@ def _sealed_related_queryset_type_factory(queryset_cls):
     if issubclass(queryset_cls, _SealedRelatedQuerySet):
         return queryset_cls
     return type(
-        str('Sealed%s' % queryset_cls.__name__), (_SealedRelatedQuerySet, queryset_cls), {},
+        str('Sealed%s' % queryset_cls.__name__), (_SealedRelatedQuerySet, queryset_cls), {
+            '_unsealed_class': queryset_cls,
+        },
     )
 
 
