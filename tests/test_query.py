@@ -188,7 +188,10 @@ class SealableQuerySetTests(TestCase):
             list(instance.previous_visitors.all())
 
     def test_sealed_string_prefetched_nested_many_to_many(self):
-        instance = SeaLion.objects.prefetch_related('previous_locations__previous_visitors').seal().get()
+        with self.assertNumQueries(3):
+            instance = SeaLion.objects.prefetch_related(
+                'previous_locations__previous_visitors'
+            ).seal().get()
         with self.assertNumQueries(0):
             self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
             self.assertSequenceEqual(
@@ -335,14 +338,6 @@ class SealableQuerySetTests(TestCase):
 
 
 class SealableQuerySetInteractionTests(SimpleTestCase):
-    def test_sealed_select_related_disallowed(self):
-        with self.assertRaisesMessage(TypeError, 'Cannot call select_related() after .seal()'):
-            SeaGull.objects.seal().select_related()
-
-    def test_sealed_prefetch_related_disallowed(self):
-        with self.assertRaisesMessage(TypeError, 'Cannot call prefetch_related() after .seal()'):
-            SeaGull.objects.seal().prefetch_related()
-
     def test_values_seal_disallowed(self):
         with self.assertRaisesMessage(TypeError, 'Cannot call seal() after .values() or .values_list()'):
             SeaGull.objects.values('id').seal()
