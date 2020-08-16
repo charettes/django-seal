@@ -4,10 +4,7 @@ from functools import partial
 from operator import attrgetter
 
 import django
-from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models.constants import LOOKUP_SEP
-from django.db.models.query import prefetch_related_objects
 
 if django.VERSION >= (2, 0):
     cached_value_getter = attrgetter('get_cached_value')
@@ -73,7 +70,6 @@ class SealedModelIterable(models.query.ModelIterable):
 
 class SealableQuerySet(models.QuerySet):
     _base_manager_class = None
-    _sealed = False
 
     def as_manager(cls):
         manager = cls._base_manager_class.from_queryset(cls)()
@@ -82,66 +78,11 @@ class SealableQuerySet(models.QuerySet):
     as_manager.queryset_only = True
     as_manager = classmethod(as_manager)
 
-    def _clone(self, **kwargs):
-        sealed = kwargs.pop('_sealed', self._sealed)
-        clone = super(SealableQuerySet, self)._clone(**kwargs)
-        clone._sealed = sealed
-        return clone
-
-    def _unsealed_prefetch_lookup(self, prefetch_lookup, to_attr=None):
-        """
-        Turn a string prefetch lookup or a Prefetch instance without an
-        explicit queryset into a Prefetch object with an explicit queryset
-        to prevent the prefetching logic from accessing sealed related
-        managers and triggering a SealedObject exception.
-        """
-        if isinstance(prefetch_lookup, string_types):
-            parts = prefetch_lookup.split(LOOKUP_SEP)
-            opts = self.model._meta
-            for part in parts:
-                try:
-                    relation = opts.get_field(part)
-                except FieldDoesNotExist:
-                    relation = getattr(opts.model, part).rel
-                related_model = relation.related_model
-                if related_model is None:
-                    break
-                opts = related_model._meta
-            if related_model:
-                queryset = related_model._default_manager.all()
-                if isinstance(queryset, SealableQuerySet):
-                    return models.Prefetch(
-                        prefetch_lookup, queryset.seal(), to_attr=to_attr
-                    )
-            # Some private fields such as GenericForeignKey don't have a remote
-            # field as reverse relationships have to be explicit defined using
-            # GenericRelation instances.
-            return prefetch_lookup
-        elif isinstance(prefetch_lookup, models.Prefetch):
-            if prefetch_lookup.queryset is None:
-                return self._unsealed_prefetch_lookup(
-                    prefetch_lookup.prefetch_through,
-                    to_attr=prefetch_lookup.to_attr,
-                )
-            elif isinstance(prefetch_lookup.queryset, SealableQuerySet):
-                prefetch_lookup.queryset = prefetch_lookup.queryset.seal()
-        return prefetch_lookup
-
-    def _prefetch_related_objects(self):
-        prefetch_related_lookups = self._prefetch_related_lookups
-        if self._sealed:
-            prefetch_related_lookups = tuple(
-                self._unsealed_prefetch_lookup(looukp)
-                for looukp in prefetch_related_lookups
-            )
-        prefetch_related_objects(self._result_cache, *prefetch_related_lookups)
-        self._prefetch_done = True
-
     def seal(self, iterable_class=SealedModelIterable):
         if self._fields is not None:
             raise TypeError('Cannot call seal() after .values() or .values_list()')
         if not issubclass(iterable_class, SealedModelIterable):
             raise TypeError('iterable_class %r is not a subclass of SealedModelIterable' % iterable_class)
-        clone = self._clone(_sealed=True)
+        clone = self._clone()
         clone._iterable_class = iterable_class
         return clone

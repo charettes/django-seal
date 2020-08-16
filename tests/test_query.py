@@ -10,6 +10,7 @@ from django.test.utils import isolate_apps
 
 from seal.descriptors import _SealedRelatedQuerySet
 from seal.exceptions import UnsealedAttributeAccess
+from seal.models import make_model_sealable
 from seal.query import SealableQuerySet, SealedModelIterable
 
 from .models import (
@@ -382,7 +383,7 @@ class SealableQuerySetInteractionTests(SimpleTestCase):
 
 class SealableQuerySetNonSealableModelTests(TestCase):
     """
-    A SealableQuerySet should be usuable on non SealableModel subclasses.
+    A SealableQuerySet should be usable on non SealableModel subclasses.
     """
     @classmethod
     def setUpTestData(cls):
@@ -436,6 +437,7 @@ class SealableQuerySetNonSealableModelTests(TestCase):
 
             class Meta:
                 db_table = Location._meta.db_table
+        make_model_sealable(NonSealableLocation)
         queryset = SealableQuerySet(model=NonSealableLocation)
         instance = queryset.prefetch_related('climates').seal().get()
         self.assertTrue(instance._state.sealed)

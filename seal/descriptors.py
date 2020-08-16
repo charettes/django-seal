@@ -16,6 +16,7 @@ from django.db.models.fields.related import (
 from django.utils.functional import cached_property
 
 from .exceptions import UnsealedAttributeAccess
+from .query import SealableQuerySet
 
 try:
     from functools import lru_cache
@@ -49,6 +50,14 @@ class _SealedRelatedQuerySet(QuerySet):
         super(_SealedRelatedQuerySet, self)._fetch_all()
 
 
+class SealedPrefetchMixin(object):
+    def get_prefetch_queryset(self, instances, queryset=None):
+        prefetch = super(SealedPrefetchMixin, self).get_prefetch_queryset(instances, queryset)
+        if getattr(instances[0]._state, 'sealed', False) and isinstance(prefetch[0], SealableQuerySet):
+            prefetch = (prefetch[0].seal(),) + prefetch[1:]
+        return prefetch
+
+
 @lru_cache(maxsize=100)
 def _sealed_related_queryset_type_factory(queryset_cls):
     if issubclass(queryset_cls, _SealedRelatedQuerySet):
@@ -70,7 +79,7 @@ def seal_related_queryset(queryset, warning):
 
 
 def create_sealable_related_manager(related_manager_cls, field_name):
-    class SealableRelatedManager(related_manager_cls):
+    class SealableRelatedManager(SealedPrefetchMixin, related_manager_cls):
         def get_queryset(self):
             if getattr(self.instance._state, 'sealed', False):
                 try:
@@ -109,7 +118,7 @@ class SealableDeferredAttribute(DeferredAttribute):
         return super(SealableDeferredAttribute, self).__get__(instance, cls)
 
 
-class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
+class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDescriptor):
     def get_object(self, instance):
         sealed = getattr(instance._state, 'sealed', False)
         if sealed:
@@ -143,7 +152,7 @@ class SealableForwardOneToOneDescriptor(ForwardOneToOneDescriptor):
         return super(SealableForwardOneToOneDescriptor, self).get_object(instance)
 
 
-class SealableReverseOneToOneDescriptor(ReverseOneToOneDescriptor):
+class SealableReverseOneToOneDescriptor(SealedPrefetchMixin, ReverseOneToOneDescriptor):
     def get_queryset(self, instance, **hints):
         if getattr(instance._state, 'sealed', False):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.related.name, _bare_repr(instance))
