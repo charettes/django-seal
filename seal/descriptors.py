@@ -39,7 +39,8 @@ class _SealedRelatedQuerySet(QuerySet):
         return clone
 
     def __getitem__(self, item):
-        warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=2)
+        if self._result_cache is None:
+            warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=2)
         return super(_SealedRelatedQuerySet, self).__getitem__(item)
 
     def _fetch_all(self):

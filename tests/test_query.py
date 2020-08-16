@@ -324,17 +324,37 @@ class SealableQuerySetTests(TestCase):
         self.assertSequenceEqual(instance.nicknames.all(), [self.nickname])
 
     def test_sealed_prefetched_select_related_many_to_many(self):
-        instance = SeaLion.objects.select_related(
-            'location',
-        ).prefetch_related(
-            'location__climates',
-        ).seal().get()
-        self.assertSequenceEqual(instance.location.climates.all(), [self.climate])
+        with self.assertNumQueries(2):
+            instance = SeaLion.objects.select_related(
+                'location',
+            ).prefetch_related(
+                'location__climates',
+            ).seal().get()
+        with self.assertNumQueries(0):
+            self.assertSequenceEqual(instance.location.climates.all(), [self.climate])
 
     def test_prefetch_without_related_name(self):
         island = Island.objects.create(location=self.location)
         location = Location.objects.prefetch_related('island_set').seal().get()
         self.assertSequenceEqual(location.island_set.all(), [island])
+
+    def test_prefetch_combine(self):
+        with self.assertNumQueries(6):
+            instance = SeaLion.objects.prefetch_related(
+                'location',
+                'location__climates',
+                'location__previous_visitors__location',
+                'location__previous_visitors__previous_locations',
+            ).seal().get()
+        with self.assertNumQueries(0):
+            self.assertEqual(instance.location, self.location)
+            self.assertSequenceEqual(instance.location.climates.all(), [self.climate])
+            self.assertSequenceEqual(instance.location.previous_visitors.all(), [self.sealion])
+            self.assertEqual(instance.location.previous_visitors.all()[0].location, self.location)
+            self.assertSequenceEqual(
+                instance.location.previous_visitors.all()[0].previous_locations.all(),
+                [self.location]
+            )
 
 
 class SealableQuerySetInteractionTests(SimpleTestCase):
