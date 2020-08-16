@@ -19,6 +19,7 @@ setup(
     author_email='simon.charette@zapier.com',
     install_requires=[
         'Django>=1.11',
+        'enum34;python_version<"3.4"',
     ],
     packages=find_packages(exclude=['tests', 'tests.*']),
     license='MIT License',
