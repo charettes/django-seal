@@ -98,29 +98,21 @@ class SealableQuerySet(models.QuerySet):
         if isinstance(prefetch_lookup, string_types):
             parts = prefetch_lookup.split(LOOKUP_SEP)
             opts = self.model._meta
-            select_related = self.query.select_related or {}
-            # Walk to the first non-select_related part of the prefetch lookup.
-            for index, part in enumerate(parts, start=1):
+            for part in parts:
                 try:
                     relation = opts.get_field(part)
                 except FieldDoesNotExist:
                     relation = getattr(opts.model, part).rel
                 related_model = relation.related_model
-                try:
-                    select_related = select_related[part]
-                except KeyError:
+                if related_model is None:
                     break
                 opts = related_model._meta
-            head, tail = LOOKUP_SEP.join(parts[:index]), LOOKUP_SEP.join(parts[index:])
             if related_model:
                 queryset = related_model._default_manager.all()
                 if isinstance(queryset, SealableQuerySet):
-                    queryset = queryset.seal()
-                if tail:
-                    queryset._prefetch_related_lookups = (
-                        queryset._unsealed_prefetch_lookup(tail),
+                    return models.Prefetch(
+                        prefetch_lookup, queryset.seal(), to_attr=to_attr
                     )
-                return models.Prefetch(head, queryset, to_attr=to_attr)
             # Some private fields such as GenericForeignKey don't have a remote
             # field as reverse relationships have to be explicit defined using
             # GenericRelation instances.
