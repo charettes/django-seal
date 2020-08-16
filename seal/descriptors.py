@@ -53,8 +53,9 @@ class _SealedRelatedQuerySet(QuerySet):
 class SealedPrefetchMixin(object):
     def get_prefetch_queryset(self, instances, queryset=None):
         prefetch = super(SealedPrefetchMixin, self).get_prefetch_queryset(instances, queryset)
-        if getattr(instances[0]._state, 'sealed', False) and isinstance(prefetch[0], SealableQuerySet):
-            prefetch = (prefetch[0].seal(),) + prefetch[1:]
+        seal = getattr(instances[0]._state, 'seal', None)
+        if seal is not None and isinstance(prefetch[0], SealableQuerySet):
+            prefetch = (prefetch[0].seal(seal=seal),) + prefetch[1:]
         return prefetch
 
 
@@ -81,7 +82,7 @@ def seal_related_queryset(queryset, warning):
 def create_sealable_related_manager(related_manager_cls, field_name):
     class SealableRelatedManager(SealedPrefetchMixin, related_manager_cls):
         def get_queryset(self):
-            if getattr(self.instance._state, 'sealed', False):
+            if hasattr(self.instance._state, 'seal'):
                 try:
                     prefetch_cache_name = self.prefetch_cache_name
                 except AttributeError:
@@ -110,7 +111,7 @@ class SealableDeferredAttribute(DeferredAttribute):
     def __get__(self, instance, cls=None):
         if instance is None:
             return self
-        if (getattr(instance._state, 'sealed', False) and
+        if (hasattr(instance._state, 'seal') and
             instance.__dict__.get(self.field_name, self) is self and
                 self._check_parent_chain(instance, self.field_name) is None):
             message = 'Attempt to fetch deferred field "%s" on sealed %s.' % (self.field_name, _bare_repr(instance))
@@ -120,7 +121,7 @@ class SealableDeferredAttribute(DeferredAttribute):
 
 class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDescriptor):
     def get_object(self, instance):
-        sealed = getattr(instance._state, 'sealed', False)
+        sealed = hasattr(instance._state, 'seal')
         if sealed:
             from .models import SealableModel
             rel_model = self.field.remote_field.model
@@ -154,7 +155,7 @@ class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDesc
 
 class SealableReverseOneToOneDescriptor(SealedPrefetchMixin, ReverseOneToOneDescriptor):
     def get_queryset(self, instance, **hints):
-        if getattr(instance._state, 'sealed', False):
+        if hasattr(instance._state, 'seal'):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.related.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super(SealableReverseOneToOneDescriptor, self).get_queryset(instance=instance, **hints)
@@ -162,7 +163,7 @@ class SealableReverseOneToOneDescriptor(SealedPrefetchMixin, ReverseOneToOneDesc
 
 class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
     def get_object(self, instance):
-        if getattr(instance._state, 'sealed', False):
+        if getattr(instance._state, 'seal', False):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.field.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super(SealableForwardManyToOneDescriptor, self).get_object(instance)
@@ -188,7 +189,7 @@ class SealableGenericForeignKey(GenericForeignKey):
         if instance is None:
             return self
 
-        if getattr(instance._state, 'sealed', False) and not self.is_cached(instance):
+        if hasattr(instance._state, 'seal') and not self.is_cached(instance):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
 

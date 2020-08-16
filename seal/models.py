@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models.fields.related import lazy_related_operation
 from django.dispatch import receiver
 
+from .constants import Seal
 from .descriptors import sealable_descriptor_classes
 from .query import SealableQuerySet
 
@@ -43,12 +44,12 @@ class SealableModel(models.Model):
     class Meta:
         abstract = True
 
-    def seal(self):
+    def seal(self, seal=Seal.SINGLE):
         """
         Seal the instance to turn deferred and related fields access that would
         required fetching from the database into exceptions.
         """
-        self._state.sealed = True
+        self._state.seal = seal
 
 
 def make_descriptor_sealable(model, attname):

@@ -8,6 +8,7 @@ from django.db.models.query import ModelIterable
 from django.test import SimpleTestCase, TestCase
 from django.test.utils import isolate_apps
 
+from seal.constants import Seal
 from seal.descriptors import _SealedRelatedQuerySet
 from seal.exceptions import UnsealedAttributeAccess
 from seal.models import make_model_sealable
@@ -41,7 +42,7 @@ class SealableQuerySetTests(TestCase):
 
     def test_state_sealed_assigned(self):
         instance = SeaLion.objects.seal().get()
-        self.assertTrue(instance._state.sealed)
+        self.assertIs(instance._state.seal, Seal.SINGLE)
 
     def test_sealed_deferred_field(self):
         instance = SeaLion.objects.seal().defer('weight').get()
@@ -399,7 +400,7 @@ class SealableQuerySetNonSealableModelTests(TestCase):
                 db_table = Location._meta.db_table
         queryset = SealableQuerySet(model=NonSealableLocation)
         instance = queryset.seal().get()
-        self.assertTrue(instance._state.sealed)
+        self.assertTrue(instance._state.seal)
 
     @isolate_apps('tests')
     def test_sealed_select_related_non_sealable_model(self):
@@ -414,8 +415,8 @@ class SealableQuerySetNonSealableModelTests(TestCase):
                 db_table = SeaLion._meta.db_table
         queryset = SealableQuerySet(model=NonSealableSeaLion)
         instance = queryset.select_related('location').seal().get()
-        self.assertTrue(instance._state.sealed)
-        self.assertTrue(instance.location._state.sealed)
+        self.assertIs(instance._state.seal, Seal.SINGLE)
+        self.assertIs(instance.location._state.seal, Seal.SINGLE)
 
     @isolate_apps('tests')
     def test_sealed_prefetch_related_non_sealable_model(self):
@@ -440,6 +441,6 @@ class SealableQuerySetNonSealableModelTests(TestCase):
         make_model_sealable(NonSealableLocation)
         queryset = SealableQuerySet(model=NonSealableLocation)
         instance = queryset.prefetch_related('climates').seal().get()
-        self.assertTrue(instance._state.sealed)
+        self.assertIs(instance._state.seal, Seal.SINGLE)
         with self.assertNumQueries(0):
-            self.assertTrue(instance.climates.all()[0]._state.sealed)
+            self.assertIs(instance.climates.all()[0]._state.seal, Seal.SINGLE)
