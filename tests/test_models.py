@@ -101,6 +101,14 @@ class SealableModelTests(SimpleTestCase):
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             list(previous_visitors)
 
+    def test_sealed_instance_self_referential_m2m_acccess(self):
+        instance = Location.from_db('default', ['id'], [1])
+        instance.seal()
+        message = 'Attempt to fetch many-to-many field "related_locations" on sealed <Location instance>'
+        previous_visitors = instance.related_locations.all()
+        with self.assertRaisesMessage(UnsealedAttributeAccess, message):
+            list(previous_visitors)
+
 
 class ContentTypesSealableModelTests(TestCase):
     @classmethod

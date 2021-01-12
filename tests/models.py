@@ -29,6 +29,7 @@ class Location(SealableModel):
     latitude = models.FloatField()
     longitude = models.FloatField()
     climates = models.ManyToManyField(Climate, blank=True, related_name='locations')
+    related_locations = models.ManyToManyField('self')
 
 
 class Island(models.Model):

@@ -72,6 +72,9 @@ def make_remote_field_descriptor_sealable(model, related_model, remote_field):
     if not issubclass(related_model, SealableModel):
         return
     accessor_name = remote_field.get_accessor_name()
+    # Self-referential many-to-many fields don't have a reverse accessor.
+    if accessor_name is None:
+        return
     make_descriptor_sealable(related_model, accessor_name)
 
 
