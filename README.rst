@@ -7,8 +7,8 @@ django-seal
 
 ------------
 
-.. image:: https://travis-ci.org/charettes/django-seal.svg?branch=master
-    :target: https://travis-ci.org/charettes/django-seal
+.. image:: https://github.com/charettes/django-seal/workflows/Test/badge.svg
+    :target: https://github.com/charettes/django-seal/actions
     :alt: Build Status
 
 .. image:: https://coveralls.io/repos/github/charettes/django-seal/badge.svg?branch=master
