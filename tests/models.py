@@ -3,15 +3,8 @@ from django.contrib.contenttypes.fields import (
 )
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils.encoding import force_text
 
 from seal.models import SealableModel
-
-try:
-    from django.utils.encoding import python_2_unicode_compatible
-except ImportError:
-    def python_2_unicode_compatible(cls):
-        return cls
 
 
 class Nickname(SealableModel):
@@ -41,7 +34,6 @@ class Leak(models.Model):
     description = models.TextField()
 
 
-@python_2_unicode_compatible
 class SeaLion(SealableModel):
     height = models.PositiveIntegerField()
     weight = models.PositiveIntegerField()
@@ -51,10 +43,10 @@ class SeaLion(SealableModel):
     leak_o2o = models.OneToOneField(Leak, models.CASCADE, null=True, related_name='sealion_soulmate')
 
     def __str__(self):
-        return force_text(repr(self))
+        return repr(self)
 
     def __repr__(self):
-        return str('<SeaLion %s %s %s>' % (self.id, self.height, self.weight))
+        return '<SeaLion %s %s %s>' % (self.id, self.height, self.weight)
 
 
 class SeaLionAbstractSubclass(SeaLion):

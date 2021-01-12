@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from functools import partial
 from operator import attrgetter
 
@@ -11,11 +9,6 @@ if django.VERSION >= (2, 0):
 else:
     def cached_value_getter(field):
         return attrgetter(field.get_cache_name())
-
-try:
-    from django.utils.six import string_types
-except ImportError:
-    string_types = str,
 
 
 def get_select_related_getters(lookups, opts):
@@ -34,9 +27,7 @@ def walk_select_relateds(obj, getters):
             # We don't need to seal a None relation or any of its children.
             continue
         yield related_obj
-        # yield from walk_select_relateds(related_obj, nested_getters)
-        for nested_related_obj in walk_select_relateds(related_obj, nested_getters):
-            yield nested_related_obj
+        yield from walk_select_relateds(related_obj, nested_getters)
 
 
 class SealedModelIterable(models.query.ModelIterable):
@@ -63,9 +54,7 @@ class SealedModelIterable(models.query.ModelIterable):
             iterator = self._sealed_related_iterator(related_walker)
         else:
             iterator = self._sealed_iterator()
-        # yield from iterator
-        for obj in iterator:
-            yield obj
+        yield from iterator
 
 
 class SealableQuerySet(models.QuerySet):

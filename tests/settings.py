@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 SECRET_KEY = 'not-secret-anymore'
 
 TIME_ZONE = 'America/Montreal'

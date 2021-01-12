@@ -3,8 +3,6 @@ sudo: false
 language: python
 cache: pip
 python:
-  - 2.7
-  - 3.5
   - 3.6
   - 3.7
   - 3.8
@@ -14,11 +12,11 @@ stages:
 jobs:
   fast_finish: true
   include:
-    - { stage: lint, env: TOXENV=flake8, python: 2.7 }
-    - { stage: lint, env: TOXENV=isort, python: 2.7 }
+    - { stage: lint, env: TOXENV=flake8, python: 3.6 }
+    - { stage: lint, env: TOXENV=isort, python: 3.6 }
     - stage: deploy
       if: tag IS present
-      python: 2.7
+      python: 3.6
       deploy:
         skip_existing: true
         provider: pypi

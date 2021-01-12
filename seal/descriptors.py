@@ -1,6 +1,5 @@
-from __future__ import unicode_literals
-
 import warnings
+from functools import lru_cache
 
 import django
 from django.contrib.contenttypes.fields import (
@@ -17,11 +16,6 @@ from django.utils.functional import cached_property
 
 from .exceptions import UnsealedAttributeAccess
 from .query import SealableQuerySet
-
-try:
-    from functools import lru_cache
-except ImportError:
-    from django.utils.lru_cache import lru_cache
 
 
 def _bare_repr(instance):
