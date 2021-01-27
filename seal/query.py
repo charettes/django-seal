@@ -1,14 +1,9 @@
 from functools import partial
 from operator import attrgetter
 
-import django
 from django.db import models
 
-if django.VERSION >= (2, 0):
-    cached_value_getter = attrgetter('get_cached_value')
-else:
-    def cached_value_getter(field):
-        return attrgetter(field.get_cache_name())
+cached_value_getter = attrgetter('get_cached_value')
 
 
 def get_select_related_getters(lookups, opts):

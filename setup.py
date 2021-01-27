@@ -16,7 +16,7 @@ setup(
     author='Simon Charette',
     author_email='simon.charette@zapier.com',
     install_requires=[
-        'Django>=1.11',
+        'Django>=2.2',
     ],
     packages=find_packages(exclude=['tests', 'tests.*']),
     license='MIT License',
@@ -24,7 +24,6 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Framework :: Django',
-        'Framework :: Django :: 1.11',
         'Framework :: Django :: 2.2',
         'Framework :: Django :: 3.0',
         'Framework :: Django :: 3.1',
