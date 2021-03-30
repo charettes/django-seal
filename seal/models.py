@@ -86,7 +86,10 @@ def make_model_sealable(model):
     """
     opts = model._meta
     for field in (opts.local_fields + opts.local_many_to_many + opts.private_fields):
-        make_descriptor_sealable(model, field.name)
+        name = field.name
+        attnames = {name, getattr(field, 'attname', name)}
+        for attname in attnames:
+            make_descriptor_sealable(model, attname)
         remote_field = field.remote_field
         if remote_field:
             # Use lazy_related_operation because lazy relationships might not

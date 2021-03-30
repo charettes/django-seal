@@ -31,6 +31,13 @@ class SealableModelTests(SimpleTestCase):
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.weight
 
+    def test_sealed_instance_deferred_foreign_key_attribute_access(self):
+        instance = SeaLion.from_db('default', ['id'], [1])
+        instance.seal()
+        message = 'Attempt to fetch deferred field "location_id" on sealed <SeaLion instance>'
+        with self.assertRaisesMessage(UnsealedAttributeAccess, message):
+            instance.location_id
+
     def test_sealed_instance_foreign_key_access(self):
         instance = SeaLion.from_db('default', ['id', 'location_id'], [1, 1])
         instance.seal()

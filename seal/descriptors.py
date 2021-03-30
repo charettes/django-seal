@@ -206,3 +206,16 @@ sealable_descriptor_classes = {
     GenericForeignKey: SealableGenericForeignKey,
     ReverseGenericManyToOneDescriptor: SealableReverseGenericManyToOneDescriptor,
 }
+
+# XXX: Remove import error handling when dropping support for Django < 3.0.
+try:
+    from django.db.models.fields.related_descriptors import (
+        ForeignKeyDeferredAttribute,
+    )
+except ImportError:
+    pass
+else:
+    class SealableForeignKeyDeferredAttribute(SealableDeferredAttribute, ForeignKeyDeferredAttribute):
+        pass
+
+    sealable_descriptor_classes[ForeignKeyDeferredAttribute] = SealableForeignKeyDeferredAttribute
