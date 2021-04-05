@@ -62,6 +62,12 @@ class Migration(migrations.Migration):
                         blank=True, related_name='locations', to='tests.Climate'
                     ),
                 ),
+                (
+                    'related_locations',
+                    models.ManyToManyField(
+                        blank=True, to='tests.Location'
+                    ),
+                ),
             ],
             options={'abstract': False},
         ),

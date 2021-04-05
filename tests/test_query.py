@@ -357,6 +357,17 @@ class SealableQuerySetTests(TestCase):
                 [self.location]
             )
 
+    def test_sealed_related_prefetch_relate_results_cache(self):
+        """Some related managers fetch objects in get_prefetch_queryset()."""
+        location_relations = ['climates', 'related_locations', 'visitors']
+        for relation in location_relations:
+            with self.subTest(relation=relation), self.assertNumQueries(2):
+                list(Location.objects.seal().prefetch_related(relation).all())
+        sea_lion_relations = ['location', 'previous_locations', 'leak', 'leak_o2o']
+        for relation in sea_lion_relations:
+            with self.subTest(relation=relation), self.assertNumQueries(2):
+                list(SeaLion.objects.seal().prefetch_related(relation).all())
+
 
 class SealableQuerySetInteractionTests(SimpleTestCase):
     def test_values_seal_disallowed(self):

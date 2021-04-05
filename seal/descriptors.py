@@ -46,10 +46,11 @@ class _SealedRelatedQuerySet(QuerySet):
 
 class SealedPrefetchMixin(object):
     def get_prefetch_queryset(self, instances, queryset=None):
-        prefetch = super(SealedPrefetchMixin, self).get_prefetch_queryset(instances, queryset)
-        if getattr(instances[0]._state, 'sealed', False) and isinstance(prefetch[0], SealableQuerySet):
-            prefetch = (prefetch[0].seal(),) + prefetch[1:]
-        return prefetch
+        if queryset is None:
+            queryset = self.get_queryset()
+        if getattr(instances[0]._state, 'sealed', False) and isinstance(queryset, SealableQuerySet):
+            queryset = queryset.seal()
+        return super().get_prefetch_queryset(instances, queryset)
 
 
 @lru_cache(maxsize=100)

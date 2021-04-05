@@ -1,3 +1,9 @@
+1.4.2
+=====
+:release-date: 2021-04-05
+
+- Properly handled related descriptors ``get_prefetch_queryset`` overrides (#58)
+
 1.4.1
 =====
 :release-date: 2021-03-30
