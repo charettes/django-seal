@@ -368,7 +368,28 @@ class SealableQuerySetTests(TestCase):
             with self.subTest(relation=relation), self.assertNumQueries(2):
                 list(SeaLion.objects.seal().prefetch_related(relation).all())
 
-    def test_sealed_prefetch_related_generic_results(self):
+    def test_sealed_prefetch_many_to_many_results(self):
+        other_location = Location.objects.create(latitude=51.585474, longitude=156.634331)
+        other_climate = Climate.objects.create(temperature=60)
+        other_location.climates.add(other_climate)
+        with self.assertNumQueries(2):
+            results = list(Location.objects.seal().prefetch_related('climates').order_by('pk'))
+        self.assertEqual(results, [self.location, other_location])
+        with self.assertNumQueries(0):
+            self.assertEqual(list(results[0].climates.all()), [self.climate])
+            self.assertEqual(list(results[1].climates.all()), [other_climate])
+
+    def test_sealed_prefetch_reverse_many_to_one_results(self):
+        other_location = Location.objects.create(latitude=51.585474, longitude=156.634331)
+        other_sealion = SeaLion.objects.create(height=1, weight=2, location=other_location)
+        with self.assertNumQueries(2):
+            results = list(Location.objects.seal().prefetch_related('visitors').order_by('pk'))
+        self.assertEqual(results, [self.location, other_location])
+        with self.assertNumQueries(0):
+            self.assertEqual(list(results[0].visitors.all()), [self.sealion])
+            self.assertEqual(list(results[1].visitors.all()), [other_sealion])
+
+    def test_sealed_prefetch_reverse_generic_many_to_one_results(self):
         other_sealion = SeaLion.objects.create(height=1, weight=2)
         other_gull = SeaGull.objects.create(sealion=other_sealion)
         other_nickname = Nickname.objects.create(name='Test Nickname', content_object=other_gull)

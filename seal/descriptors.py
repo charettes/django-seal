@@ -76,14 +76,13 @@ def seal_related_queryset(queryset, warning):
     return queryset
 
 
-def create_sealable_related_manager(related_manager_cls, field_name, *, generic=False):
+def create_sealable_related_manager(related_manager_cls, field_name):
     class SealableRelatedManager(SealedPrefetchMixin, related_manager_cls):
         def _get_default_prefetch_queryset(self):
-            # Generic related manager apply filtering directly through
-            # `get_queryset`.
-            if generic:
-                return super(related_manager_cls, self).get_queryset()
-            return super().get_queryset()
+            # By-pass `related_manager_cls.get_queryset()` as that's the default
+            # for dynamically created manager's `get_prefetch_queryset` when
+            # no `queryset` is specified.
+            return super(related_manager_cls, self).get_queryset()
 
         def get_queryset(self):
             if getattr(self.instance._state, 'sealed', False):
@@ -204,7 +203,7 @@ class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescripto
     @cached_property
     def related_manager_cls(self):
         related_manager_cls = super(SealableReverseGenericManyToOneDescriptor, self).related_manager_cls
-        return create_sealable_related_manager(related_manager_cls, self.field.name, generic=True)
+        return create_sealable_related_manager(related_manager_cls, self.field.name)
 
 
 sealable_descriptor_classes = {
