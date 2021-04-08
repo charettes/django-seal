@@ -1,6 +1,6 @@
 1.4.3
 =====
-:release-date: 2021-04-05
+:release-date: 2021-04-08
 
 - Address a regression introduced in 1.4.2 that made sealing querysets
   prefetching generic relationships return the wrong results.
