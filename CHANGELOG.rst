@@ -1,3 +1,10 @@
+1.4.4
+=====
+:release-date: 2021-07-30
+
+- Fixed a bug with prefetching of sealed models reverse one-to-one
+  descriptors (#65)
+
 1.4.3
 =====
 :release-date: 2021-04-08
