@@ -4,3 +4,4 @@ dist/
 django_seal.egg-info/*
 .coverage
 .tox
+/.mypy_cache/
