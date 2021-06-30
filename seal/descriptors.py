@@ -14,7 +14,7 @@ from django.db.models.fields.related import (
 )
 from django.utils.functional import cached_property
 
-from .exceptions import UnsealedAttributeAccess
+from .exceptions import RelatedQuerysetUnsealed, UnsealedAttributeAccess
 from .query import SealableQuerySet
 
 
@@ -30,6 +30,13 @@ class _SealedRelatedQuerySet(QuerySet):
     """
     def _clone(self, *args, **kwargs):
         clone = super()._clone(*args, **kwargs)
+        warnings.warn(
+            'Related %s queryset prefetched from %s unsealed' % (
+                self.model.__name__, _bare_repr(self._hints['instance'])
+            ),
+            category=RelatedQuerysetUnsealed,
+            stacklevel=6,
+        )
         clone.__class__ = self._unsealed_class
         return clone
 
