@@ -9,7 +9,7 @@ from .query import SealableQuerySet
 
 class BaseSealableManager(models.manager.Manager):
     def check(self, **kwargs):
-        errors = super(BaseSealableManager, self).check(**kwargs)
+        errors = super().check(**kwargs)
         if not issubclass(self.model, SealableModel):
             if getattr(self, '_built_with_as_manager', False):
                 origin = '%s.as_manager()' % self._queryset_class.__name__

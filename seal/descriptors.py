@@ -29,19 +29,19 @@ class _SealedRelatedQuerySet(QuerySet):
     As soon as the query is cloned it gets unsealed.
     """
     def _clone(self, *args, **kwargs):
-        clone = super(_SealedRelatedQuerySet, self)._clone(*args, **kwargs)
+        clone = super()._clone(*args, **kwargs)
         clone.__class__ = self._unsealed_class
         return clone
 
     def __getitem__(self, item):
         if self._result_cache is None:
             warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=2)
-        return super(_SealedRelatedQuerySet, self).__getitem__(item)
+        return super().__getitem__(item)
 
     def _fetch_all(self):
         if self._result_cache is None:
             warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=3)
-        super(_SealedRelatedQuerySet, self)._fetch_all()
+        super()._fetch_all()
 
 
 class SealedPrefetchMixin(object):
@@ -96,9 +96,9 @@ def create_sealable_related_manager(related_manager_cls, field_name):
                     warning = 'Attempt to fetch many-to-many field "%s" on sealed %s.' % (
                         field_name, _bare_repr(self.instance),
                     )
-                    related_queryset = super(SealableRelatedManager, self).get_queryset()
+                    related_queryset = super().get_queryset()
                     return seal_related_queryset(related_queryset, warning)
-            return super(SealableRelatedManager, self).get_queryset()
+            return super().get_queryset()
     return SealableRelatedManager
 
 
@@ -109,7 +109,7 @@ class SealableDeferredAttribute(DeferredAttribute):
             return self.field.attname
 
         def _check_parent_chain(self, instance, field_name=None):
-            super(SealableDeferredAttribute, self)._check_parent_chain(instance)
+            super()._check_parent_chain(instance)
 
     def __get__(self, instance, cls=None):
         if instance is None:
@@ -119,7 +119,7 @@ class SealableDeferredAttribute(DeferredAttribute):
                 self._check_parent_chain(instance, self.field_name) is None):
             message = 'Attempt to fetch deferred field "%s" on sealed %s.' % (self.field_name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
-        return super(SealableDeferredAttribute, self).__get__(instance, cls)
+        return super().__get__(instance, cls)
 
 
 class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDescriptor):
@@ -147,13 +147,13 @@ class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDesc
                     # are deferred ForwardOneToOneDescriptor.get_object() simply
                     # create an in-memory object from the existing field values.
                     # Make sure this in-memory instance is sealed as well.
-                    obj = super(SealableForwardOneToOneDescriptor, self).get_object(instance)
+                    obj = super().get_object(instance)
                     obj.seal()
                     return obj
             else:
                 message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.field.name, _bare_repr(instance))
                 warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
-        return super(SealableForwardOneToOneDescriptor, self).get_object(instance)
+        return super().get_object(instance)
 
 
 class SealableReverseOneToOneDescriptor(SealedPrefetchMixin, ReverseOneToOneDescriptor):
@@ -161,7 +161,7 @@ class SealableReverseOneToOneDescriptor(SealedPrefetchMixin, ReverseOneToOneDesc
         if getattr(instance._state, 'sealed', False):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.related.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
-        return super(SealableReverseOneToOneDescriptor, self).get_queryset(instance=instance, **hints)
+        return super().get_queryset(instance=instance, **hints)
 
 
 class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
@@ -169,20 +169,20 @@ class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
         if getattr(instance._state, 'sealed', False):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.field.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
-        return super(SealableForwardManyToOneDescriptor, self).get_object(instance)
+        return super().get_object(instance)
 
 
 class SealableReverseManyToOneDescriptor(ReverseManyToOneDescriptor):
     @cached_property
     def related_manager_cls(self):
-        related_manager_cls = super(SealableReverseManyToOneDescriptor, self).related_manager_cls
+        related_manager_cls = super().related_manager_cls
         return create_sealable_related_manager(related_manager_cls, self.rel.name)
 
 
 class SealableManyToManyDescriptor(ManyToManyDescriptor):
     @cached_property
     def related_manager_cls(self):
-        related_manager_cls = super(SealableManyToManyDescriptor, self).related_manager_cls
+        related_manager_cls = super().related_manager_cls
         field_name = self.rel.name if self.reverse else self.field.name
         return create_sealable_related_manager(related_manager_cls, field_name)
 
@@ -196,13 +196,13 @@ class SealableGenericForeignKey(GenericForeignKey):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
 
-        return super(SealableGenericForeignKey, self).__get__(instance, cls=cls)
+        return super().__get__(instance, cls=cls)
 
 
 class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescriptor):
     @cached_property
     def related_manager_cls(self):
-        related_manager_cls = super(SealableReverseGenericManyToOneDescriptor, self).related_manager_cls
+        related_manager_cls = super().related_manager_cls
         return create_sealable_related_manager(related_manager_cls, self.field.name)
 
 

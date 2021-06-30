@@ -28,7 +28,7 @@ def walk_select_relateds(obj, getters):
 class SealedModelIterable(models.query.ModelIterable):
     def _sealed_iterator(self):
         """Iterate over objects and seal them."""
-        objs = super(SealedModelIterable, self).__iter__()
+        objs = super().__iter__()
         for obj in objs:
             obj._state.sealed = True
             yield obj
