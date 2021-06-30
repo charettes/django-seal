@@ -9,7 +9,7 @@ from django.test import SimpleTestCase, TestCase
 from django.test.utils import isolate_apps
 
 from seal.descriptors import _SealedRelatedQuerySet
-from seal.exceptions import UnsealedAttributeAccess
+from seal.exceptions import RelatedQuerysetUnsealed, UnsealedAttributeAccess
 from seal.models import make_model_sealable
 from seal.query import SealableQuerySet, SealedModelIterable
 
@@ -37,6 +37,7 @@ class SealableQuerySetTests(TestCase):
 
     def setUp(self):
         warnings.filterwarnings('error', category=UnsealedAttributeAccess)
+        warnings.filterwarnings('error', category=RelatedQuerysetUnsealed)
         self.addCleanup(warnings.resetwarnings)
 
     def test_state_sealed_assigned(self):
@@ -155,12 +156,15 @@ class SealableQuerySetTests(TestCase):
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.previous_locations.all()[0]
 
-    def test_sealed_many_to_many_queryset(self):
+    def test_sealed_many_to_many_queryset_unsealed(self):
+        warnings.resetwarnings()
         instance = SeaLion.objects.seal().get()
-        self.assertEqual(instance.previous_locations.get(pk=self.location.pk), self.location)
-        self.assertFalse(
-            isinstance(instance.previous_locations.filter(pk=self.location.pk), _SealedRelatedQuerySet)
-        )
+        with self.assertWarns(RelatedQuerysetUnsealed):
+            self.assertEqual(instance.previous_locations.get(pk=self.location.pk), self.location)
+        with self.assertWarns(RelatedQuerysetUnsealed):
+            self.assertFalse(
+                isinstance(instance.previous_locations.filter(pk=self.location.pk), _SealedRelatedQuerySet)
+            )
 
     def test_not_sealed_many_to_many(self):
         instance = SeaLion.objects.get()
@@ -302,12 +306,15 @@ class SealableQuerySetTests(TestCase):
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.previous_visitors.all()[0]
 
-    def test_sealed_reverse_many_to_many_queryset(self):
+    def test_sealed_reverse_many_to_many_queryset_unsealed(self):
+        warnings.resetwarnings()
         instance = Location.objects.seal().get()
-        self.assertEqual(instance.previous_visitors.get(pk=self.sealion.pk), self.sealion)
-        self.assertFalse(
-            isinstance(instance.previous_visitors.filter(pk=self.sealion.pk), _SealedRelatedQuerySet)
-        )
+        with self.assertWarns(RelatedQuerysetUnsealed):
+            self.assertEqual(instance.previous_visitors.get(pk=self.sealion.pk), self.sealion)
+        with self.assertWarns(RelatedQuerysetUnsealed):
+            self.assertFalse(
+                isinstance(instance.previous_visitors.filter(pk=self.sealion.pk), _SealedRelatedQuerySet)
+            )
 
     def test_not_reverse_sealed_many_to_many(self):
         instance = Location.objects.get()
