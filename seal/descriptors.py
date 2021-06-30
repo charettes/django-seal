@@ -157,11 +157,12 @@ class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDesc
 
 
 class SealableReverseOneToOneDescriptor(SealedPrefetchMixin, ReverseOneToOneDescriptor):
-    def get_queryset(self, instance, **hints):
-        if getattr(instance._state, 'sealed', False):
+    def get_queryset(self, **hints):
+        instance = hints.get('instance')
+        if instance and getattr(instance._state, 'sealed', False):
             message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.related.name, _bare_repr(instance))
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
-        return super().get_queryset(instance=instance, **hints)
+        return super().get_queryset(**hints)
 
 
 class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
