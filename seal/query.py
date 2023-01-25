@@ -8,7 +8,7 @@ cached_value_getter = attrgetter('get_cached_value')
 
 def get_select_related_getters(lookups, opts):
     """Turn a select_related dict structure into a tree of attribute getters"""
-    if lookups is False:
+    if isinstance(lookups, bool):
         return
     for lookup, nested_lookups in lookups.items():
         field = opts.get_field(lookup)
