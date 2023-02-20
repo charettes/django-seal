@@ -1,17 +1,17 @@
-SECRET_KEY = 'not-secret-anymore'
+SECRET_KEY = "not-secret-anymore"
 
-TIME_ZONE = 'America/Montreal'
+TIME_ZONE = "America/Montreal"
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
     },
 }
 
 INSTALLED_APPS = [
-    'django.contrib.contenttypes',
-    'seal',
-    'tests',
+    "django.contrib.contenttypes",
+    "seal",
+    "tests",
 ]
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

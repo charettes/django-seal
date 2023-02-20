@@ -3,7 +3,7 @@ from operator import attrgetter
 
 from django.db import models
 
-cached_value_getter = attrgetter('get_cached_value')
+cached_value_getter = attrgetter("get_cached_value")
 
 
 def get_select_related_getters(lookups, opts):
@@ -11,7 +11,10 @@ def get_select_related_getters(lookups, opts):
     for lookup, nested_lookups in lookups.items():
         field = opts.get_field(lookup)
         lookup_opts = field.related_model._meta
-        yield (cached_value_getter(field), tuple(get_select_related_getters(nested_lookups, lookup_opts)))
+        yield (
+            cached_value_getter(field),
+            tuple(get_select_related_getters(nested_lookups, lookup_opts)),
+        )
 
 
 def walk_select_relateds(obj, getters):
@@ -44,8 +47,12 @@ class SealedModelIterable(models.query.ModelIterable):
         select_related = self.queryset.query.select_related
         if select_related:
             opts = self.queryset.model._meta
-            select_related_getters = tuple(get_select_related_getters(self.queryset.query.select_related, opts))
-            related_walker = partial(walk_select_relateds, getters=select_related_getters)
+            select_related_getters = tuple(
+                get_select_related_getters(self.queryset.query.select_related, opts)
+            )
+            related_walker = partial(
+                walk_select_relateds, getters=select_related_getters
+            )
             iterator = self._sealed_related_iterator(related_walker)
         else:
             iterator = self._sealed_iterator()
@@ -59,14 +66,18 @@ class SealableQuerySet(models.QuerySet):
         manager = cls._base_manager_class.from_queryset(cls)()
         manager._built_with_as_manager = True
         return manager
+
     as_manager.queryset_only = True
     as_manager = classmethod(as_manager)
 
     def seal(self, iterable_class=SealedModelIterable):
         if self._fields is not None:
-            raise TypeError('Cannot call seal() after .values() or .values_list()')
+            raise TypeError("Cannot call seal() after .values() or .values_list()")
         if not issubclass(iterable_class, SealedModelIterable):
-            raise TypeError('iterable_class %r is not a subclass of SealedModelIterable' % iterable_class)
+            raise TypeError(
+                "iterable_class %r is not a subclass of SealedModelIterable"
+                % iterable_class
+            )
         clone = self._clone()
         clone._iterable_class = iterable_class
         return clone

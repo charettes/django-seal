@@ -5,218 +5,215 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [('contenttypes', '0002_remove_content_type_name')]
+    dependencies = [("contenttypes", "0002_remove_content_type_name")]
 
     operations = [
         migrations.CreateModel(
-            name='Climate',
+            name="Climate",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('temperature', models.IntegerField()),
+                ("temperature", models.IntegerField()),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.CreateModel(
-            name='Leak',
+            name="Leak",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('description', models.TextField()),
+                ("description", models.TextField()),
             ],
         ),
         migrations.CreateModel(
-            name='Location',
+            name="Location",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('latitude', models.FloatField()),
-                ('longitude', models.FloatField()),
+                ("latitude", models.FloatField()),
+                ("longitude", models.FloatField()),
                 (
-                    'climates',
+                    "climates",
                     models.ManyToManyField(
-                        blank=True, related_name='locations', to='tests.Climate'
+                        blank=True, related_name="locations", to="tests.Climate"
                     ),
                 ),
                 (
-                    'related_locations',
-                    models.ManyToManyField(
-                        blank=True, to='tests.Location'
-                    ),
+                    "related_locations",
+                    models.ManyToManyField(blank=True, to="tests.Location"),
                 ),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.CreateModel(
-            name='Nickname',
+            name="Nickname",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('name', models.CharField(max_length=24)),
-                ('object_id', models.PositiveIntegerField()),
+                ("name", models.CharField(max_length=24)),
+                ("object_id", models.PositiveIntegerField()),
                 (
-                    'content_type',
+                    "content_type",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='contenttypes.ContentType',
+                        to="contenttypes.ContentType",
                     ),
                 ),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.CreateModel(
-            name='SeaGull',
+            name="SeaGull",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 )
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.CreateModel(
-            name='SeaLion',
+            name="SeaLion",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('height', models.PositiveIntegerField()),
-                ('weight', models.PositiveIntegerField()),
+                ("height", models.PositiveIntegerField()),
+                ("weight", models.PositiveIntegerField()),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.CreateModel(
-            name='GreatSeaLion',
+            name="GreatSeaLion",
             fields=[
                 (
-                    'sealion_ptr',
+                    "sealion_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to='tests.SeaLion',
+                        to="tests.SeaLion",
                     ),
                 )
             ],
-            options={'abstract': False},
-            bases=('tests.sealion',),
+            options={"abstract": False},
+            bases=("tests.sealion",),
         ),
         migrations.AddField(
-            model_name='sealion',
-            name='leak',
+            model_name="sealion",
+            name="leak",
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='sealion_just_friends',
-                to='tests.Leak',
+                related_name="sealion_just_friends",
+                to="tests.Leak",
             ),
         ),
         migrations.AddField(
-            model_name='sealion',
-            name='leak_o2o',
+            model_name="sealion",
+            name="leak_o2o",
             field=models.OneToOneField(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='sealion_soulmate',
-                to='tests.Leak',
+                related_name="sealion_soulmate",
+                to="tests.Leak",
             ),
         ),
         migrations.AddField(
-            model_name='sealion',
-            name='location',
+            model_name="sealion",
+            name="location",
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='visitors',
-                to='tests.Location',
+                related_name="visitors",
+                to="tests.Location",
             ),
         ),
         migrations.AddField(
-            model_name='sealion',
-            name='previous_locations',
+            model_name="sealion",
+            name="previous_locations",
             field=models.ManyToManyField(
-                related_name='previous_visitors', to='tests.Location'
+                related_name="previous_visitors", to="tests.Location"
             ),
         ),
         migrations.AddField(
-            model_name='seagull',
-            name='sealion',
+            model_name="seagull",
+            name="sealion",
             field=models.OneToOneField(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='gull',
-                to='tests.SeaLion',
+                related_name="gull",
+                to="tests.SeaLion",
             ),
         ),
         migrations.CreateModel(
-            name='SealionProxy',
+            name="SealionProxy",
             fields=[],
-            options={'proxy': True, 'indexes': []},
-            bases=('tests.sealion',),
+            options={"proxy": True, "indexes": []},
+            bases=("tests.sealion",),
         ),
         migrations.CreateModel(
-            name='Island',
+            name="Island",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'location',
+                    "location",
                     models.ForeignKey(
-                        to='tests.Location',
+                        to="tests.Location",
                         on_delete=django.db.models.deletion.CASCADE,
                     ),
-                )
+                ),
             ],
         ),
     ]

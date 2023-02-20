@@ -2,14 +2,18 @@ import warnings
 from functools import lru_cache
 
 from django.contrib.contenttypes.fields import (
-    GenericForeignKey, ReverseGenericManyToOneDescriptor,
+    GenericForeignKey,
+    ReverseGenericManyToOneDescriptor,
 )
 from django.db.models import QuerySet
 from django.db.models.fields import DeferredAttribute
 from django.db.models.fields.related import (
-    ForeignKeyDeferredAttribute, ForwardManyToOneDescriptor,
-    ForwardOneToOneDescriptor, ManyToManyDescriptor,
-    ReverseManyToOneDescriptor, ReverseOneToOneDescriptor,
+    ForeignKeyDeferredAttribute,
+    ForwardManyToOneDescriptor,
+    ForwardOneToOneDescriptor,
+    ManyToManyDescriptor,
+    ReverseManyToOneDescriptor,
+    ReverseOneToOneDescriptor,
 )
 from django.utils.functional import cached_property
 
@@ -19,7 +23,7 @@ from .query import SealableQuerySet
 
 
 def _bare_repr(instance):
-    return '<%s instance>' % instance.__class__.__name__
+    return "<%s instance>" % instance.__class__.__name__
 
 
 class _SealedRelatedQuerySet(QuerySet):
@@ -28,6 +32,7 @@ class _SealedRelatedQuerySet(QuerySet):
 
     As soon as the query is cloned it gets unsealed.
     """
+
     def _clone(self, *args, **kwargs):
         clone = super()._clone(*args, **kwargs)
         clone.__class__ = self._unsealed_class
@@ -35,12 +40,16 @@ class _SealedRelatedQuerySet(QuerySet):
 
     def __getitem__(self, item):
         if self._result_cache is None:
-            warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=2)
+            warnings.warn(
+                self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=2
+            )
         return super().__getitem__(item)
 
     def _fetch_all(self):
         if self._result_cache is None:
-            warnings.warn(self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=3)
+            warnings.warn(
+                self._sealed_warning, category=UnsealedAttributeAccess, stacklevel=3
+            )
         super()._fetch_all()
 
 
@@ -51,7 +60,9 @@ class SealedPrefetchMixin(object):
     def get_prefetch_queryset(self, instances, queryset=None):
         if queryset is None:
             queryset = self._get_default_prefetch_queryset()
-        if getattr(instances[0]._state, 'sealed', False) and isinstance(queryset, SealableQuerySet):
+        if getattr(instances[0]._state, "sealed", False) and isinstance(
+            queryset, SealableQuerySet
+        ):
             queryset = queryset.seal()
         return super().get_prefetch_queryset(instances, queryset)
 
@@ -61,8 +72,10 @@ def _sealed_related_queryset_type_factory(queryset_cls):
     if issubclass(queryset_cls, _SealedRelatedQuerySet):
         return queryset_cls
     return type(
-        str('Sealed%s' % queryset_cls.__name__), (_SealedRelatedQuerySet, queryset_cls), {
-            '_unsealed_class': queryset_cls,
+        str("Sealed%s" % queryset_cls.__name__),
+        (_SealedRelatedQuerySet, queryset_cls),
+        {
+            "_unsealed_class": queryset_cls,
         },
     )
 
@@ -85,7 +98,7 @@ def create_sealable_related_manager(related_manager_cls, field_name):
             return super(related_manager_cls, self).get_queryset()
 
         def get_queryset(self):
-            if getattr(self.instance._state, 'sealed', False):
+            if getattr(self.instance._state, "sealed", False):
                 try:
                     prefetch_cache_name = self.prefetch_cache_name
                 except AttributeError:
@@ -93,12 +106,17 @@ def create_sealable_related_manager(related_manager_cls, field_name):
                 try:
                     return self.instance._prefetched_objects_cache[prefetch_cache_name]
                 except (AttributeError, KeyError):
-                    warning = 'Attempt to fetch many-to-many field "%s" on sealed %s.' % (
-                        field_name, _bare_repr(self.instance),
+                    warning = (
+                        'Attempt to fetch many-to-many field "%s" on sealed %s.'
+                        % (
+                            field_name,
+                            _bare_repr(self.instance),
+                        )
                     )
                     related_queryset = super().get_queryset()
                     return seal_related_queryset(related_queryset, warning)
             return super().get_queryset()
+
     return SealableRelatedManager
 
 
@@ -113,20 +131,27 @@ class SealableDeferredAttribute(DeferredAttribute):
     def __get__(self, instance, cls=None):
         if instance is None:
             return self
-        if (getattr(instance._state, 'sealed', False) and
-            instance.__dict__.get(self.field_name, self) is self and
-                self._check_parent_chain(instance, self.field_name) is None):
-            message = 'Attempt to fetch deferred field "%s" on sealed %s.' % (self.field_name, _bare_repr(instance))
+        if (
+            getattr(instance._state, "sealed", False)
+            and instance.__dict__.get(self.field_name, self) is self
+            and self._check_parent_chain(instance, self.field_name) is None
+        ):
+            message = 'Attempt to fetch deferred field "%s" on sealed %s.' % (
+                self.field_name,
+                _bare_repr(instance),
+            )
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
         return super().__get__(instance, cls)
 
 
 class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDescriptor):
     def get_object(self, instance):
-        sealed = getattr(instance._state, 'sealed', False)
+        sealed = getattr(instance._state, "sealed", False)
         if sealed:
             rel_model = self.field.remote_field.model
-            if self.field.remote_field.parent_link and issubclass(rel_model, models.SealableModel):
+            if self.field.remote_field.parent_link and issubclass(
+                rel_model, models.SealableModel
+            ):
                 deferred = instance.get_deferred_fields()
                 # Because it's a parent link, all the data is available in the
                 # instance, so populate the parent model with this data.
@@ -137,9 +162,12 @@ class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDesc
                 # the query from being performed.
                 if any(field in fields for field in deferred):
                     message = 'Attempt to fetch related field "%s" on sealed %s.' % (
-                        self.field.name, _bare_repr(instance)
+                        self.field.name,
+                        _bare_repr(instance),
                     )
-                    warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
+                    warnings.warn(
+                        message, category=UnsealedAttributeAccess, stacklevel=3
+                    )
                 else:
                     # When none of the fields inherited from the parent link
                     # are deferred ForwardOneToOneDescriptor.get_object() simply
@@ -149,24 +177,33 @@ class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDesc
                     obj.seal()
                     return obj
             else:
-                message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.field.name, _bare_repr(instance))
+                message = 'Attempt to fetch related field "%s" on sealed %s.' % (
+                    self.field.name,
+                    _bare_repr(instance),
+                )
                 warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super().get_object(instance)
 
 
 class SealableReverseOneToOneDescriptor(SealedPrefetchMixin, ReverseOneToOneDescriptor):
     def get_queryset(self, **hints):
-        instance = hints.get('instance')
-        if instance and getattr(instance._state, 'sealed', False):
-            message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.related.name, _bare_repr(instance))
+        instance = hints.get("instance")
+        if instance and getattr(instance._state, "sealed", False):
+            message = 'Attempt to fetch related field "%s" on sealed %s.' % (
+                self.related.name,
+                _bare_repr(instance),
+            )
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super().get_queryset(**hints)
 
 
 class SealableForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
     def get_object(self, instance):
-        if getattr(instance._state, 'sealed', False):
-            message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.field.name, _bare_repr(instance))
+        if getattr(instance._state, "sealed", False):
+            message = 'Attempt to fetch related field "%s" on sealed %s.' % (
+                self.field.name,
+                _bare_repr(instance),
+            )
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=3)
         return super().get_object(instance)
 
@@ -191,8 +228,11 @@ class SealableGenericForeignKey(GenericForeignKey):
         if instance is None:
             return self
 
-        if getattr(instance._state, 'sealed', False) and not self.is_cached(instance):
-            message = 'Attempt to fetch related field "%s" on sealed %s.' % (self.name, _bare_repr(instance))
+        if getattr(instance._state, "sealed", False) and not self.is_cached(instance):
+            message = 'Attempt to fetch related field "%s" on sealed %s.' % (
+                self.name,
+                _bare_repr(instance),
+            )
             warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
 
         return super().__get__(instance, cls=cls)
@@ -205,7 +245,9 @@ class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescripto
         return create_sealable_related_manager(related_manager_cls, self.field.name)
 
 
-class SealableForeignKeyDeferredAttribute(SealableDeferredAttribute, ForeignKeyDeferredAttribute):
+class SealableForeignKeyDeferredAttribute(
+    SealableDeferredAttribute, ForeignKeyDeferredAttribute
+):
     pass
 
 

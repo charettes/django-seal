@@ -11,15 +11,16 @@ class BaseSealableManager(models.manager.Manager):
     def check(self, **kwargs):
         errors = super().check(**kwargs)
         if not issubclass(self.model, SealableModel):
-            if getattr(self, '_built_with_as_manager', False):
-                origin = '%s.as_manager()' % self._queryset_class.__name__
+            if getattr(self, "_built_with_as_manager", False):
+                origin = "%s.as_manager()" % self._queryset_class.__name__
             else:
                 origin = self.__class__.__name__
             errors.append(
                 checks.Error(
-                    '%s can only be used on seal.SealableModel subclasses.' % origin,
-                    id='seal.E001',
-                    hint='Make %s inherit from seal.SealableModel.' % self.model._meta.label,
+                    "%s can only be used on seal.SealableModel subclasses." % origin,
+                    id="seal.E001",
+                    hint="Make %s inherit from seal.SealableModel."
+                    % self.model._meta.label,
                     obj=self,
                 )
             )
@@ -27,7 +28,9 @@ class BaseSealableManager(models.manager.Manager):
 
 
 SealableQuerySet._base_manager_class = BaseSealableManager
-SealableManager = BaseSealableManager.from_queryset(SealableQuerySet, str('SealableManager'))
+SealableManager = BaseSealableManager.from_queryset(
+    SealableQuerySet, str("SealableManager")
+)
 
 
 class SealableModel(models.Model):
@@ -58,7 +61,9 @@ def make_descriptor_sealable(model, attname):
     except AttributeError:
         # Handle hidden reverse accessor case. e.g. related_name='+'
         return
-    sealable_descriptor_class = descriptors.sealable_descriptor_classes.get(descriptor.__class__)
+    sealable_descriptor_class = descriptors.sealable_descriptor_classes.get(
+        descriptor.__class__
+    )
     if sealable_descriptor_class:
         descriptor.__class__ = sealable_descriptor_class
 
@@ -85,9 +90,9 @@ def make_model_sealable(model):
     done loading models such as from an AppConfig.ready().
     """
     opts = model._meta
-    for field in (opts.local_fields + opts.local_many_to_many + opts.private_fields):
+    for field in opts.local_fields + opts.local_many_to_many + opts.private_fields:
         name = field.name
-        attnames = {name, getattr(field, 'attname', name)}
+        attnames = {name, getattr(field, "attname", name)}
         for attname in attnames:
             make_descriptor_sealable(model, attname)
         remote_field = field.remote_field
@@ -95,7 +100,10 @@ def make_model_sealable(model):
             # Use lazy_related_operation because lazy relationships might not
             # be resolved yet.
             lazy_related_operation(
-                make_remote_field_descriptor_sealable, model, remote_field.model, remote_field=remote_field
+                make_remote_field_descriptor_sealable,
+                model,
+                remote_field.model,
+                remote_field=remote_field,
             )
     # Non SealableModel subclasses won't have remote fields descriptors
     # attached to them made sealable so make sure to make locally defined

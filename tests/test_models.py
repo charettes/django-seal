@@ -8,9 +8,12 @@ from django.test import SimpleTestCase, TestCase
 from django.test.utils import isolate_apps
 
 from seal.descriptors import (
-    SealableDeferredAttribute, SealableForwardManyToOneDescriptor,
-    SealableForwardOneToOneDescriptor, SealableManyToManyDescriptor,
-    SealableReverseManyToOneDescriptor, SealableReverseOneToOneDescriptor,
+    SealableDeferredAttribute,
+    SealableForwardManyToOneDescriptor,
+    SealableForwardOneToOneDescriptor,
+    SealableManyToManyDescriptor,
+    SealableReverseManyToOneDescriptor,
+    SealableReverseOneToOneDescriptor,
 )
 from seal.exceptions import UnsealedAttributeAccess
 from seal.models import SealableManager, make_model_sealable
@@ -21,32 +24,38 @@ from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
 
 class SealableModelTests(SimpleTestCase):
     def setUp(self):
-        warnings.filterwarnings('error', category=UnsealedAttributeAccess)
+        warnings.filterwarnings("error", category=UnsealedAttributeAccess)
         self.addCleanup(warnings.resetwarnings)
 
     def test_sealed_instance_deferred_attribute_access(self):
-        instance = SeaLion.from_db('default', ['id'], [1])
+        instance = SeaLion.from_db("default", ["id"], [1])
         instance.seal()
-        message = 'Attempt to fetch deferred field "weight" on sealed <SeaLion instance>'
+        message = (
+            'Attempt to fetch deferred field "weight" on sealed <SeaLion instance>'
+        )
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.weight
 
     def test_sealed_instance_deferred_foreign_key_attribute_access(self):
-        instance = SeaLion.from_db('default', ['id'], [1])
+        instance = SeaLion.from_db("default", ["id"], [1])
         instance.seal()
-        message = 'Attempt to fetch deferred field "location_id" on sealed <SeaLion instance>'
+        message = (
+            'Attempt to fetch deferred field "location_id" on sealed <SeaLion instance>'
+        )
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.location_id
 
     def test_sealed_instance_foreign_key_access(self):
-        instance = SeaLion.from_db('default', ['id', 'location_id'], [1, 1])
+        instance = SeaLion.from_db("default", ["id", "location_id"], [1, 1])
         instance.seal()
-        message = 'Attempt to fetch related field "location" on sealed <SeaLion instance>'
+        message = (
+            'Attempt to fetch related field "location" on sealed <SeaLion instance>'
+        )
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.location
 
     def test_sealed_instance_reverse_foreign_key_access(self):
-        instance = Location.from_db('default', ['id'], [1])
+        instance = Location.from_db("default", ["id"], [1])
         instance.seal()
         message = 'Attempt to fetch many-to-many field "visitors" on sealed <Location instance>'
         visitors = instance.visitors.all()
@@ -54,28 +63,32 @@ class SealableModelTests(SimpleTestCase):
             list(visitors)
 
     def test_sealed_instance_one_to_one_access(self):
-        instance = SeaGull.from_db('default', ['id', 'sealion_id'], [1, 1])
+        instance = SeaGull.from_db("default", ["id", "sealion_id"], [1, 1])
         instance.seal()
-        message = 'Attempt to fetch related field "sealion" on sealed <SeaGull instance>'
+        message = (
+            'Attempt to fetch related field "sealion" on sealed <SeaGull instance>'
+        )
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.sealion
 
     def test_sealed_instance_reverse_one_to_one_access(self):
-        instance = SeaLion.from_db('default', ['id'], [1])
+        instance = SeaLion.from_db("default", ["id"], [1])
         instance.seal()
         message = 'Attempt to fetch related field "gull" on sealed <SeaLion instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.gull
 
     def test_sealed_instance_parent_link_access(self):
-        instance = SeaLion.from_db('default', ['id'], [1])
+        instance = SeaLion.from_db("default", ["id"], [1])
         instance.seal()
-        message = 'Attempt to fetch related field "greatsealion" on sealed <SeaLion instance>'
+        message = (
+            'Attempt to fetch related field "greatsealion" on sealed <SeaLion instance>'
+        )
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.greatsealion
 
     def test_sealed_instance_reverse_parent_link_access(self):
-        instance = GreatSeaLion.from_db('default', ['sealion_ptr_id'], [1])
+        instance = GreatSeaLion.from_db("default", ["sealion_ptr_id"], [1])
         instance.seal()
         message = 'Attempt to fetch related field "sealion_ptr" on sealed <GreatSeaLion instance>'
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
@@ -83,17 +96,27 @@ class SealableModelTests(SimpleTestCase):
 
     def test_sealed_instance_reverse_parent_link_access_sealed(self):
         instance = GreatSeaLion.from_db(
-            'default',
-            ['id', 'sealion_ptr_id', 'height', 'weight', 'location_id', 'leak_id', 'leak_o2o_id'],
-            [1, 1, 1, 1, 1, 1, 1]
+            "default",
+            [
+                "id",
+                "sealion_ptr_id",
+                "height",
+                "weight",
+                "location_id",
+                "leak_id",
+                "leak_o2o_id",
+            ],
+            [1, 1, 1, 1, 1, 1, 1],
         )
         instance.seal()
-        message = 'Attempt to fetch related field "location" on sealed <SeaLion instance>'
+        message = (
+            'Attempt to fetch related field "location" on sealed <SeaLion instance>'
+        )
         with self.assertRaisesMessage(UnsealedAttributeAccess, message):
             instance.sealion_ptr.location
 
     def test_sealed_instance_m2m_access(self):
-        instance = SeaLion.from_db('default', ['id'], [1])
+        instance = SeaLion.from_db("default", ["id"], [1])
         instance.seal()
         message = 'Attempt to fetch many-to-many field "previous_locations" on sealed <SeaLion instance>'
         previous_locations = instance.previous_locations.all()
@@ -101,7 +124,7 @@ class SealableModelTests(SimpleTestCase):
             list(previous_locations)
 
     def test_sealed_instance_reverse_m2m_access(self):
-        instance = Location.from_db('default', ['id'], [1])
+        instance = Location.from_db("default", ["id"], [1])
         instance.seal()
         message = 'Attempt to fetch many-to-many field "previous_visitors" on sealed <Location instance>'
         previous_visitors = instance.previous_visitors.all()
@@ -109,7 +132,7 @@ class SealableModelTests(SimpleTestCase):
             list(previous_visitors)
 
     def test_sealed_instance_self_referential_m2m_acccess(self):
-        instance = Location.from_db('default', ['id'], [1])
+        instance = Location.from_db("default", ["id"], [1])
         instance.seal()
         message = 'Attempt to fetch many-to-many field "related_locations" on sealed <Location instance>'
         previous_visitors = instance.related_locations.all()
@@ -120,26 +143,32 @@ class SealableModelTests(SimpleTestCase):
 class ContentTypesSealableModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        tests_models = tuple(apps.get_app_config('tests').get_models())
+        tests_models = tuple(apps.get_app_config("tests").get_models())
         ContentType.objects.get_for_models(*tests_models, for_concrete_models=True)
 
     def setUp(self):
-        warnings.filterwarnings('error', category=UnsealedAttributeAccess)
+        warnings.filterwarnings("error", category=UnsealedAttributeAccess)
         self.addCleanup(warnings.resetwarnings)
 
     def test_sealed_instance_generic_foreign_key(self):
-        instance = Nickname.from_db('default', ['id', 'content_type_id', 'object_id'], [1, 1, 1])
+        instance = Nickname.from_db(
+            "default", ["id", "content_type_id", "object_id"], [1, 1, 1]
+        )
         instance.seal()
         message = 'Attempt to fetch related field "content_object" on sealed <Nickname instance>'
-        with self.assertNumQueries(0), self.assertRaisesMessage(UnsealedAttributeAccess, message):
+        with self.assertNumQueries(0), self.assertRaisesMessage(
+            UnsealedAttributeAccess, message
+        ):
             instance.content_object
 
     def test_sealed_instance_generic_relation(self):
-        instance = SeaGull.from_db('default', ['id'], [1])
+        instance = SeaGull.from_db("default", ["id"], [1])
         instance.seal()
         message = 'Attempt to fetch many-to-many field "nicknames" on sealed <SeaGull instance>'
         nicknames = instance.nicknames.all()
-        with self.assertNumQueries(0), self.assertRaisesMessage(UnsealedAttributeAccess, message):
+        with self.assertNumQueries(0), self.assertRaisesMessage(
+            UnsealedAttributeAccess, message
+        ):
             list(nicknames)
 
 
@@ -149,40 +178,47 @@ class SealableManagerTests(SimpleTestCase):
         self.assertIsInstance(SealableManager(), models.Manager)
         self.assertIsInstance(SealableQuerySet.as_manager(), models.Manager)
 
-    @isolate_apps('tests')
+    @isolate_apps("tests")
     def test_non_sealable_model(self):
         class Foo(models.Model):
             manager = SealableManager()
             as_manager = SealableQuerySet.as_manager()
-        self.assertEqual(Foo.manager.check(), [
-            checks.Error(
-                'SealableManager can only be used on seal.SealableModel subclasses.',
-                id='seal.E001',
-                hint='Make tests.Foo inherit from seal.SealableModel.',
-                obj=Foo.manager,
-            )
-        ])
-        self.assertEqual(Foo.as_manager.check(), [
-            checks.Error(
-                'SealableQuerySet.as_manager() can only be used on seal.SealableModel subclasses.',
-                id='seal.E001',
-                hint='Make tests.Foo inherit from seal.SealableModel.',
-                obj=Foo.as_manager,
-            )
-        ])
+
+        self.assertEqual(
+            Foo.manager.check(),
+            [
+                checks.Error(
+                    "SealableManager can only be used on seal.SealableModel subclasses.",
+                    id="seal.E001",
+                    hint="Make tests.Foo inherit from seal.SealableModel.",
+                    obj=Foo.manager,
+                )
+            ],
+        )
+        self.assertEqual(
+            Foo.as_manager.check(),
+            [
+                checks.Error(
+                    "SealableQuerySet.as_manager() can only be used on seal.SealableModel subclasses.",
+                    id="seal.E001",
+                    hint="Make tests.Foo inherit from seal.SealableModel.",
+                    obj=Foo.as_manager,
+                )
+            ],
+        )
 
 
 class MakeModelSealableTests(SimpleTestCase):
-    @isolate_apps('tests')
+    @isolate_apps("tests")
     def test_make_non_sealable_model_subclass(self):
         class Foo(models.Model):
             pass
 
         class Bar(models.Model):
             foo = models.BooleanField(default=False)
-            fk = models.ForeignKey(Foo, models.CASCADE, related_name='fk_bar')
-            o2o = models.OneToOneField(Foo, models.CASCADE, related_name='o2o_bar')
-            m2m = models.ManyToManyField(Foo, related_name='m2m_bar')
+            fk = models.ForeignKey(Foo, models.CASCADE, related_name="fk_bar")
+            o2o = models.OneToOneField(Foo, models.CASCADE, related_name="o2o_bar")
+            m2m = models.ManyToManyField(Foo, related_name="m2m_bar")
 
         make_model_sealable(Bar)
 
