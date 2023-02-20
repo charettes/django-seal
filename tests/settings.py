@@ -13,3 +13,5 @@ INSTALLED_APPS = [
     'seal',
     'tests',
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
