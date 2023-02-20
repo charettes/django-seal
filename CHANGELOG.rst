@@ -1,3 +1,10 @@
+1.5.0
+=====
+:release-date: 2023-02-20
+
+- Added tested support for Python 3.10, 3.11 and Django 4.0, 4.1, and 4.2.
+- Dropped support for Python < 3.7 and Django < 3.2.
+
 1.4.4
 =====
 :release-date: 2021-07-30
