@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.fields.related import lazy_related_operation
 from django.dispatch import receiver
 
-from .descriptors import sealable_descriptor_classes
+from . import descriptors
 from .query import SealableQuerySet
 
 
@@ -58,7 +58,7 @@ def make_descriptor_sealable(model, attname):
     except AttributeError:
         # Handle hidden reverse accessor case. e.g. related_name='+'
         return
-    sealable_descriptor_class = sealable_descriptor_classes.get(descriptor.__class__)
+    sealable_descriptor_class = descriptors.sealable_descriptor_classes.get(descriptor.__class__)
     if sealable_descriptor_class:
         descriptor.__class__ = sealable_descriptor_class
 

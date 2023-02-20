@@ -13,6 +13,7 @@ from django.db.models.fields.related import (
 )
 from django.utils.functional import cached_property
 
+from . import models
 from .exceptions import UnsealedAttributeAccess
 from .query import SealableQuerySet
 
@@ -124,9 +125,8 @@ class SealableForwardOneToOneDescriptor(SealedPrefetchMixin, ForwardOneToOneDesc
     def get_object(self, instance):
         sealed = getattr(instance._state, 'sealed', False)
         if sealed:
-            from .models import SealableModel
             rel_model = self.field.remote_field.model
-            if self.field.remote_field.parent_link and issubclass(rel_model, SealableModel):
+            if self.field.remote_field.parent_link and issubclass(rel_model, models.SealableModel):
                 deferred = instance.get_deferred_fields()
                 # Because it's a parent link, all the data is available in the
                 # instance, so populate the parent model with this data.
