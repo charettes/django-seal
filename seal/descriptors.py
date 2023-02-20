@@ -72,7 +72,7 @@ def _sealed_related_queryset_type_factory(queryset_cls):
     if issubclass(queryset_cls, _SealedRelatedQuerySet):
         return queryset_cls
     return type(
-        str("Sealed%s" % queryset_cls.__name__),
+        f"Sealed{queryset_cls.__name__}",
         (_SealedRelatedQuerySet, queryset_cls),
         {
             "_unsealed_class": queryset_cls,

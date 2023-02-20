@@ -28,9 +28,7 @@ class BaseSealableManager(models.manager.Manager):
 
 
 SealableQuerySet._base_manager_class = BaseSealableManager
-SealableManager = BaseSealableManager.from_queryset(
-    SealableQuerySet, str("SealableManager")
-)
+SealableManager = BaseSealableManager.from_queryset(SealableQuerySet, "SealableManager")
 
 
 class SealableModel(models.Model):
