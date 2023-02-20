@@ -12,6 +12,7 @@ setup(
         'queries on attribute accesses.'
     ),
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     url='https://github.com/charettes/django-seal',
     author='Simon Charette',
     author_email='simon.charette@zapier.com',
