@@ -1,16 +1,15 @@
 import warnings
 from functools import lru_cache
 
-import django
 from django.contrib.contenttypes.fields import (
     GenericForeignKey, ReverseGenericManyToOneDescriptor,
 )
 from django.db.models import QuerySet
 from django.db.models.fields import DeferredAttribute
 from django.db.models.fields.related import (
-    ForwardManyToOneDescriptor, ForwardOneToOneDescriptor,
-    ManyToManyDescriptor, ReverseManyToOneDescriptor,
-    ReverseOneToOneDescriptor,
+    ForeignKeyDeferredAttribute, ForwardManyToOneDescriptor,
+    ForwardOneToOneDescriptor, ManyToManyDescriptor,
+    ReverseManyToOneDescriptor, ReverseOneToOneDescriptor,
 )
 from django.utils.functional import cached_property
 
@@ -103,13 +102,12 @@ def create_sealable_related_manager(related_manager_cls, field_name):
 
 
 class SealableDeferredAttribute(DeferredAttribute):
-    if django.VERSION >= (3, 0, 0):
-        @cached_property
-        def field_name(self):
-            return self.field.attname
+    @cached_property
+    def field_name(self):
+        return self.field.attname
 
-        def _check_parent_chain(self, instance, field_name=None):
-            super()._check_parent_chain(instance)
+    def _check_parent_chain(self, instance, field_name=None):
+        super()._check_parent_chain(instance)
 
     def __get__(self, instance, cls=None):
         if instance is None:
@@ -207,6 +205,10 @@ class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescripto
         return create_sealable_related_manager(related_manager_cls, self.field.name)
 
 
+class SealableForeignKeyDeferredAttribute(SealableDeferredAttribute, ForeignKeyDeferredAttribute):
+    pass
+
+
 sealable_descriptor_classes = {
     DeferredAttribute: SealableDeferredAttribute,
     ForwardOneToOneDescriptor: SealableForwardOneToOneDescriptor,
@@ -216,17 +218,5 @@ sealable_descriptor_classes = {
     ManyToManyDescriptor: SealableManyToManyDescriptor,
     GenericForeignKey: SealableGenericForeignKey,
     ReverseGenericManyToOneDescriptor: SealableReverseGenericManyToOneDescriptor,
+    ForeignKeyDeferredAttribute: SealableForeignKeyDeferredAttribute,
 }
-
-# XXX: Remove import error handling when dropping support for Django < 3.0.
-try:
-    from django.db.models.fields.related_descriptors import (
-        ForeignKeyDeferredAttribute,
-    )
-except ImportError:
-    pass
-else:
-    class SealableForeignKeyDeferredAttribute(SealableDeferredAttribute, ForeignKeyDeferredAttribute):
-        pass
-
-    sealable_descriptor_classes[ForeignKeyDeferredAttribute] = SealableForeignKeyDeferredAttribute
