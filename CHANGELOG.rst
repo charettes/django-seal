@@ -1,3 +1,9 @@
+1.5.1
+=====
+:release-date: 2023-04-26
+
+- Fixed a bug when pickling related queryset of sealed objects (#71)
+
 1.5.0
 =====
 :release-date: 2023-02-20
