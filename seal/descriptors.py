@@ -52,6 +52,13 @@ class _SealedRelatedQuerySet(QuerySet):
             )
         super()._fetch_all()
 
+    def __reduce__(self):
+        return (
+            _unpickle_sealed_related_queryset,
+            (self._unsealed_class,),
+            self.__getstate__(),
+        )
+
 
 class SealedPrefetchMixin(object):
     def _get_default_prefetch_queryset(self):
@@ -78,6 +85,11 @@ def _sealed_related_queryset_type_factory(queryset_cls):
             "_unsealed_class": queryset_cls,
         },
     )
+
+
+def _unpickle_sealed_related_queryset(queryset_cls):
+    cls = _sealed_related_queryset_type_factory(queryset_cls)
+    return cls.__new__(cls)
 
 
 def seal_related_queryset(queryset, warning):

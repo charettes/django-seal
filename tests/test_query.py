@@ -1,3 +1,4 @@
+import pickle
 import warnings
 
 from django.apps import apps
@@ -503,6 +504,13 @@ class SealableQuerySetTests(TestCase):
         with self.assertNumQueries(0):
             self.assertEqual(list(results[0].nicknames.all()), [self.nickname])
             self.assertEqual(list(results[1].nicknames.all()), [other_nickname])
+
+    def test_related_sealed_pickleability(self):
+        location = Location.objects.prefetch_related("climates").seal().get()
+        climates_dump = pickle.dumps(location.climates.all())
+        climates = pickle.loads(climates_dump)
+        with self.assertNumQueries(0):
+            self.assertEqual(list(climates)[0], self.climate)
 
 
 class SealableQuerySetInteractionTests(SimpleTestCase):
