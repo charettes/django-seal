@@ -16,7 +16,7 @@ from seal.descriptors import (
     SealableReverseOneToOneDescriptor,
 )
 from seal.exceptions import UnsealedAttributeAccess
-from seal.models import SealableManager, make_model_sealable
+from seal.models import SealableManager, SealableModel, make_model_sealable
 from seal.query import SealableQuerySet
 
 from .models import GreatSeaLion, Location, Nickname, SeaGull, SeaLion
@@ -177,6 +177,35 @@ class SealableManagerTests(SimpleTestCase):
         """Manager classes are subclasses of Manager as many third-party apps expect."""
         self.assertIsInstance(SealableManager(), models.Manager)
         self.assertIsInstance(SealableQuerySet.as_manager(), models.Manager)
+
+    @isolate_apps("tests")
+    def test_declarative_seal(self):
+        class SealedManagers(SealableModel):
+            manager = SealableManager(seal=True)
+            as_manager = SealableQuerySet.as_manager(seal=True)
+
+        sealed_iterable_class = SealedManagers.objects.seal()._iterable_class
+        self.assertIsNot(
+            SealedManagers.objects.all()._iterable_class, sealed_iterable_class
+        )
+        self.assertIs(
+            SealedManagers.manager.all()._iterable_class, sealed_iterable_class
+        )
+        self.assertIs(
+            SealedManagers.as_manager.all()._iterable_class, sealed_iterable_class
+        )
+
+        class SealedModel(SealableModel, seal=True):
+            manager = SealableManager(seal=False)
+            as_manager = SealableQuerySet.as_manager(seal=False)
+
+        self.assertIs(SealedModel.objects.all()._iterable_class, sealed_iterable_class)
+        self.assertIsNot(
+            SealedModel.manager.all()._iterable_class, sealed_iterable_class
+        )
+        self.assertIsNot(
+            SealedModel.as_manager.all()._iterable_class, sealed_iterable_class
+        )
 
     @isolate_apps("tests")
     def test_non_sealable_model(self):

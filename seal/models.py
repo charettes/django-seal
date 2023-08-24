@@ -8,6 +8,29 @@ from .query import SealableQuerySet
 
 
 class BaseSealableManager(models.manager.Manager):
+    def __init__(self, seal=None):
+        self._seal_queryset = seal
+        super().__init__()
+
+    def _get_model(self):
+        return self._model
+
+    def _set_model(self, model):
+        self._model = model
+        if self._seal_queryset is None:
+            self._seal_queryset = getattr(model, "_seal_managers", None)
+
+    # Intercept .model assignment to inherit ._seal_managers as the
+    # contribute_to_class() method is not called abstract model inheritance
+    # of managers.
+    model = property(_get_model, _set_model)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self._seal_queryset:
+            queryset = queryset.seal()
+        return queryset
+
     def check(self, **kwargs):
         errors = super().check(**kwargs)
         if not issubclass(self.model, SealableModel):
@@ -36,6 +59,10 @@ class SealableModel(models.Model):
     Abstract model class that turns deferred and related fields accesses that
     would incur a database query into exceptions once sealed.
     """
+
+    def __init_subclass__(cls, seal=None):
+        cls._seal_managers = seal
+        return super().__init_subclass__()
 
     objects = SealableManager()
 

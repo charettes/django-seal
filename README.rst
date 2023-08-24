@@ -92,6 +92,27 @@ instances happen to slip through your battery of tests.
 .. _elevate the warnings to exceptions by filtering them: https://docs.python.org/3/library/warnings.html#warnings.filterwarnings
 .. _configure logging to capture warnings: https://docs.python.org/3/library/logging.html#logging.captureWarnings
 
+Sealable managers can also be automatically sealed at model definition time to avoid having to call ``seal()`` systematically
+by passing ``seal=True`` to ``SealableModel`` subclasses, ``SealableManager`` and ``SealableQuerySet.as_manager``.
+
+.. code-block:: python
+
+    from django.db import models
+    from seal.models import SealableManager, SealableModel, SealableQuerySet
+
+    class Location(SealableModel, seal=True):
+        latitude = models.FloatField()
+        longitude = models.FloatField()
+
+    class SeaLion(SealableModel):
+        height = models.PositiveIntegerField()
+        weight = models.PositiveIntegerField()
+        location = models.ForeignKey(Location, models.CASCADE, null=True)
+        previous_locations = models.ManyToManyField(Location, related_name='previous_visitors')
+
+        objects = SealableManager(seal=True)
+        others = SealableQuerySet.as_manager(seal=True)
+
 Development
 -----------
 

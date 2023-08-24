@@ -62,8 +62,8 @@ class SealedModelIterable(models.query.ModelIterable):
 class SealableQuerySet(models.QuerySet):
     _base_manager_class = None
 
-    def as_manager(cls):
-        manager = cls._base_manager_class.from_queryset(cls)()
+    def as_manager(cls, seal=None):
+        manager = cls._base_manager_class.from_queryset(cls)(seal=seal)
         manager._built_with_as_manager = True
         return manager
 
