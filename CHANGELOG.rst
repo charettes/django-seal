@@ -1,3 +1,10 @@
+
+1.6.0
+=====
+:release-date: 2023-08-26
+
+- Add declarative sealing for models and managers (#74)
+
 1.5.1
 =====
 :release-date: 2023-04-26
