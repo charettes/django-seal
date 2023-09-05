@@ -87,7 +87,7 @@ instances happen to slip through your battery of tests.
 .. code:: python
 
     >>> import logging
-    >>> logging.captureWarnings()
+    >>> logging.captureWarnings(True)
 
 .. _elevate the warnings to exceptions by filtering them: https://docs.python.org/3/library/warnings.html#warnings.filterwarnings
 .. _configure logging to capture warnings: https://docs.python.org/3/library/logging.html#logging.captureWarnings
