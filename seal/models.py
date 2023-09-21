@@ -61,6 +61,8 @@ class SealableModel(models.Model):
     """
 
     def __init_subclass__(cls, seal=None, **kwargs):
+        if seal is None:
+            seal = getattr(cls, "_seal_managers", seal)
         cls._seal_managers = seal
         return super().__init_subclass__(**kwargs)
 

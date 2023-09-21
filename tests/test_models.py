@@ -196,10 +196,17 @@ class SealableManagerTests(SimpleTestCase):
         )
 
         class MixinInitSubclass:
-            def __init_subclass__(cls, foo, **kwargs):
+            def __init_subclass__(cls, foo=None, **kwargs):
+                cls.foo = foo
                 super().__init_subclass__(**kwargs)
 
-        class SealedModel(SealableModel, MixinInitSubclass, foo="bar", seal=True):
+        class SealedBaseModel(MixinInitSubclass, SealableModel, foo="bar", seal=True):
+            class Meta:
+                abstract = True
+
+        self.assertEqual(SealedBaseModel.foo, "bar")
+
+        class SealedModel(SealedBaseModel):
             manager = SealableManager(seal=False)
             as_manager = SealableQuerySet.as_manager(seal=False)
 
