@@ -195,7 +195,11 @@ class SealableManagerTests(SimpleTestCase):
             SealedManagers.as_manager.all()._iterable_class, sealed_iterable_class
         )
 
-        class SealedModel(SealableModel, seal=True):
+        class MixinInitSubclass:
+            def __init_subclass__(cls, foo, **kwargs):
+                super().__init_subclass__(**kwargs)
+
+        class SealedModel(SealableModel, MixinInitSubclass, foo="bar", seal=True):
             manager = SealableManager(seal=False)
             as_manager = SealableQuerySet.as_manager(seal=False)
 

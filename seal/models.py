@@ -60,9 +60,9 @@ class SealableModel(models.Model):
     would incur a database query into exceptions once sealed.
     """
 
-    def __init_subclass__(cls, seal=None):
+    def __init_subclass__(cls, seal=None, **kwargs):
         cls._seal_managers = seal
-        return super().__init_subclass__()
+        return super().__init_subclass__(**kwargs)
 
     objects = SealableManager()
 
