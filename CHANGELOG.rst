@@ -1,4 +1,11 @@
 
+1.6.1
+=====
+:release-date: 2023-09-21
+
+- Add tested support for Django 5.0 (#78)
+- Adjust declarative sealing to respect MRO (#77)
+
 1.6.0
 =====
 :release-date: 2023-08-26
