@@ -6,7 +6,7 @@ with open('README.rst') as file_:
 
 setup(
     name='django-seal',
-    version='1.6.1',
+    version='1.6.2',
     description=(
         'Allows ORM constructs to be sealed to prevent them from executing '
         'queries on attribute accesses.'

@@ -1,3 +1,9 @@
+1.6.2
+=====
+:release-date: 2024-08-12
+
+- Add tested support for Django 5.1 and Python 3.12.
+- Drop support for Python < 3.8 and Django < 4.2.
 
 1.6.1
 =====
