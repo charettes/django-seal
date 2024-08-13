@@ -57,8 +57,9 @@ class SealableQuerySetTests(TestCase):
         message = (
             'Attempt to fetch deferred field "weight" on sealed <SeaLion instance>'
         )
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.weight
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_deferred_field(self):
         instance = SeaLion.objects.defer("weight").get()
@@ -69,8 +70,9 @@ class SealableQuerySetTests(TestCase):
         message = (
             'Attempt to fetch related field "location" on sealed <SeaLion instance>'
         )
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.location
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_foreign_key(self):
         instance = SeaLion.objects.get()
@@ -83,10 +85,11 @@ class SealableQuerySetTests(TestCase):
         message = (
             'Attempt to fetch related field "location" on sealed <SeaLion instance>'
         )
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.sealion.location
         instance = SeaGull.objects.select_related("sealion__location").seal().get()
         self.assertEqual(instance.sealion.location, self.location)
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_select_related_none_foreign_key(self):
         SeaLion.objects.update(location=None)
@@ -144,16 +147,18 @@ class SealableQuerySetTests(TestCase):
         message = (
             'Attempt to fetch deferred field "longitude" on sealed <Location instance>'
         )
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.sealion.location.longitude
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_one_to_one(self):
         instance = SeaGull.objects.seal().get()
         message = (
             'Attempt to fetch related field "sealion" on sealed <SeaGull instance>'
         )
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.sealion
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_one_to_one(self):
         instance = SeaGull.objects.get()
@@ -184,10 +189,12 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_many_to_many(self):
         instance = SeaLion.objects.seal().get()
         message = 'Attempt to fetch many-to-many field "previous_locations" on sealed <SeaLion instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_locations.all())
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        self.assertEqual(ctx.filename, __file__)
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.previous_locations.all()[0]
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_many_to_many_queryset(self):
         instance = SeaLion.objects.seal().get()
@@ -211,8 +218,9 @@ class SealableQuerySetTests(TestCase):
             self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
         instance = instance.previous_locations.all()[0]
         message = 'Attempt to fetch many-to-many field "previous_visitors" on sealed <Location instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_visitors.all())
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_prefetch_prefetched_many_to_many(self):
         instance = (
@@ -226,8 +234,9 @@ class SealableQuerySetTests(TestCase):
             self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
         instance = instance.previous_locations.all()[0]
         message = 'Attempt to fetch many-to-many field "previous_visitors" on sealed <Location instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_visitors.all())
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_prefetch_queryset_prefetched_many_to_many(self):
         instance = (
@@ -241,8 +250,9 @@ class SealableQuerySetTests(TestCase):
             self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
         instance = instance.previous_locations.all()[0]
         message = 'Attempt to fetch many-to-many field "previous_visitors" on sealed <Location instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_visitors.all())
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_string_prefetched_nested_many_to_many(self):
         with self.assertNumQueries(3):
@@ -261,8 +271,9 @@ class SealableQuerySetTests(TestCase):
             )
         instance = instance.previous_locations.all()[0].previous_visitors.all()[0]
         message = 'Attempt to fetch many-to-many field "previous_locations" on sealed <SeaLion instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_locations.all())
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_prefetch_prefetched_nested_many_to_many(self):
         instance = (
@@ -280,8 +291,9 @@ class SealableQuerySetTests(TestCase):
             )
         instance = instance.previous_locations.all()[0].previous_visitors.all()[0]
         message = 'Attempt to fetch many-to-many field "previous_locations" on sealed <SeaLion instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_locations.all())
+        self.assertEqual(ctx.filename, __file__)
 
     def test_prefetched_sealed_many_to_many(self):
         instance = SeaLion.objects.prefetch_related(
@@ -290,14 +302,16 @@ class SealableQuerySetTests(TestCase):
         with self.assertNumQueries(0):
             self.assertSequenceEqual(instance.previous_locations.all(), [self.location])
         message = 'Attempt to fetch many-to-many field "previous_visitors" on sealed <Location instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_locations.all()[0].previous_visitors.all())
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_deferred_parent_link(self):
         instance = GreatSeaLion.objects.only("pk").seal().get()
         message = 'Attempt to fetch related field "sealion_ptr" on sealed <GreatSeaLion instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.sealion_ptr
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_parent_link(self):
         instance = GreatSeaLion.objects.only("pk").get()
@@ -311,8 +325,9 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_generic_foreign_key(self):
         instance = Nickname.objects.seal().get()
         message = 'Attempt to fetch related field "content_object" on sealed <Nickname instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.content_object
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_generic_foreign_key(self):
         instance = Nickname.objects.get()
@@ -326,8 +341,9 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_reverse_foreign_key(self):
         instance = Location.objects.seal().get()
         message = 'Attempt to fetch many-to-many field "visitors" on sealed <Location instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.visitors.all())
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_reverse_foreign_key(self):
         instance = Location.objects.get()
@@ -342,8 +358,9 @@ class SealableQuerySetTests(TestCase):
         message = (
             'Attempt to fetch related field "greatsealion" on sealed <SeaLion instance>'
         )
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.greatsealion
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_reverse_parent_link(self):
         instance = SeaLion.objects.get()
@@ -356,10 +373,12 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_reverse_many_to_many(self):
         instance = Location.objects.seal().get()
         message = 'Attempt to fetch many-to-many field "previous_visitors" on sealed <Location instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.previous_visitors.all())
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        self.assertEqual(ctx.filename, __file__)
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.previous_visitors.all()[0]
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_reverse_many_to_many_queryset(self):
         instance = Location.objects.seal().get()
@@ -384,10 +403,12 @@ class SealableQuerySetTests(TestCase):
     def test_sealed_generic_relation(self):
         instance = SeaGull.objects.seal().get()
         message = 'Attempt to fetch many-to-many field "nicknames" on sealed <SeaGull instance>'
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             list(instance.nicknames.all())
-        with self.assertWarnsMessage(UnsealedAttributeAccess, message):
+        self.assertEqual(ctx.filename, __file__)
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
             instance.nicknames.all()[0]
+        self.assertEqual(ctx.filename, __file__)
 
     def test_not_sealed_generic_relation(self):
         instance = SeaGull.objects.get()
