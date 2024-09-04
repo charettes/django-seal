@@ -1,4 +1,5 @@
 import pickle
+import warnings
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
@@ -47,6 +48,10 @@ class SealableQuerySetTests(TestCase):
         )
         tests_models = tuple(apps.get_app_config("tests").get_models())
         ContentType.objects.get_for_models(*tests_models, for_concrete_models=True)
+
+    def setUp(self):
+        warnings.filterwarnings("error", category=UnsealedAttributeAccess)
+        self.addCleanup(warnings.resetwarnings)
 
     def test_state_sealed_assigned(self):
         instance = SeaLion.objects.seal().get()
