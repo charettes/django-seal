@@ -1,3 +1,9 @@
+1.6.3
+=====
+:release-date: unreleased
+
+- Address a crash on unrestricted ``select_related()`` usage (#81)
+
 1.6.2
 =====
 :release-date: 2024-08-12

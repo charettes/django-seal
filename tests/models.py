@@ -26,7 +26,7 @@ class Location(SealableModel):
     related_locations = models.ManyToManyField("self")
 
 
-class Island(models.Model):
+class Island(SealableModel):
     # Explicitly avoid setting a related_name.
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
 

@@ -2,18 +2,36 @@ from functools import partial
 from operator import attrgetter
 
 from django.db import models
+from django.db.models.query_utils import select_related_descend
 
 cached_value_getter = attrgetter("get_cached_value")
 
 
-def get_select_related_getters(lookups, opts):
+def get_restricted_select_related_getters(lookups, opts):
     """Turn a select_related dict structure into a tree of attribute getters"""
     for lookup, nested_lookups in lookups.items():
         field = opts.get_field(lookup)
         lookup_opts = field.related_model._meta
         yield (
             cached_value_getter(field),
-            tuple(get_select_related_getters(nested_lookups, lookup_opts)),
+            tuple(get_restricted_select_related_getters(nested_lookups, lookup_opts)),
+        )
+
+
+def get_unrestricted_select_related_getters(opts, max_depth, cur_depth=1):
+    if cur_depth > max_depth:
+        return
+    for field in opts.fields:
+        if not select_related_descend(field, False, None, {}):
+            continue
+        related_model_meta = field.related_model._meta
+        yield (
+            cached_value_getter(field),
+            tuple(
+                get_unrestricted_select_related_getters(
+                    related_model_meta, max_depth=max_depth, cur_depth=cur_depth + 1
+                )
+            ),
         )
 
 
@@ -44,12 +62,22 @@ class SealedModelIterable(models.query.ModelIterable):
             yield obj
 
     def __iter__(self):
-        select_related = self.queryset.query.select_related
+        query = self.queryset.query
+        select_related = query.select_related
         if select_related:
             opts = self.queryset.model._meta
-            select_related_getters = tuple(
-                get_select_related_getters(self.queryset.query.select_related, opts)
-            )
+            if isinstance(select_related, dict):
+                select_related_getters = tuple(
+                    get_restricted_select_related_getters(
+                        self.queryset.query.select_related, opts
+                    )
+                )
+            else:
+                select_related_getters = tuple(
+                    get_unrestricted_select_related_getters(
+                        opts, max_depth=query.max_depth
+                    )
+                )
             related_walker = partial(
                 walk_select_relateds, getters=select_related_getters
             )

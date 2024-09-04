@@ -46,6 +46,7 @@ class SealableQuerySetTests(TestCase):
         cls.nickname = Nickname.objects.create(
             name="Jonathan Livingston", content_object=cls.gull
         )
+        cls.island = Island.objects.create(location=cls.location)
         tests_models = tuple(apps.get_app_config("tests").get_models())
         ContentType.objects.get_for_models(*tests_models, for_concrete_models=True)
 
@@ -181,6 +182,19 @@ class SealableQuerySetTests(TestCase):
         instance = SeaLion.objects.select_related("gull").seal().get()
         with self.assertRaises(SeaLion.gull.RelatedObjectDoesNotExist):
             instance.gull
+
+    def test_sealed_select_related_unrestricted(self):
+        instance = Island.objects.select_related().seal().get()
+        self.assertEqual(instance.location, self.location)
+        instance = SeaLion.objects.select_related().seal().get()
+        message = (
+            'Attempt to fetch related field "location" on sealed <SeaLion instance>'
+        )
+        with self.assertWarnsMessage(UnsealedAttributeAccess, message) as ctx:
+            # null=True relationships are not followed when using
+            # an unrestricted select_related()
+            instance.location
+        self.assertEqual(ctx.filename, __file__)
 
     def test_sealed_prefetch_related_reverse_one_to_one(self):
         instance = SeaLion.objects.prefetch_related("gull").seal().get()
@@ -439,9 +453,8 @@ class SealableQuerySetTests(TestCase):
             self.assertSequenceEqual(instance.location.climates.all(), [self.climate])
 
     def test_prefetch_without_related_name(self):
-        island = Island.objects.create(location=self.location)
         location = Location.objects.prefetch_related("island_set").seal().get()
-        self.assertSequenceEqual(location.island_set.all(), [island])
+        self.assertSequenceEqual(location.island_set.all(), [self.island])
 
     def test_prefetch_combine(self):
         with self.assertNumQueries(6):
