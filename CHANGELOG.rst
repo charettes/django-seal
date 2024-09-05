@@ -1,6 +1,6 @@
 1.6.3
 =====
-:release-date: unreleased
+:release-date: 2024-09-05
 
 - Address a crash on unrestricted ``select_related()`` usage (#81)
 
