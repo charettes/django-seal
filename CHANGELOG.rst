@@ -1,3 +1,9 @@
+1.7.0
+=====
+:release-date: tbd
+
+- Drop support for Python < 3.9.
+
 1.6.3
 =====
 :release-date: 2024-09-05
