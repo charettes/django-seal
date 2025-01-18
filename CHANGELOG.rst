@@ -3,7 +3,7 @@
 :release-date: tbd
 
 - Drop support for Python < 3.9.
-- Add tested support for Python 3.13.
+- Add tested support for Django 5.2 and Python 3.13.
 
 1.6.3
 =====
