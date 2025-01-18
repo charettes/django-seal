@@ -3,6 +3,7 @@
 :release-date: tbd
 
 - Drop support for Python < 3.9.
+- Add tested support for Python 3.13.
 
 1.6.3
 =====
