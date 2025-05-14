@@ -26,6 +26,9 @@ Installation
 
     pip install django-seal
 
+
+Note: ``django.contrib.contenttypes`` must be included in ``INSTALLED_APPS``
+
 Usage
 -----
 
