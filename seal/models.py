@@ -1,7 +1,6 @@
 from django.core import checks
 from django.db import models
 from django.db.models.fields.related import lazy_related_operation
-from django.dispatch import receiver
 
 from . import descriptors
 from .query import SealableQuerySet
@@ -138,16 +137,3 @@ def make_model_sealable(model):
     if not issubclass(model, SealableModel):
         for related_object in opts.related_objects:
             make_descriptor_sealable(model, related_object.get_accessor_name())
-
-
-@receiver(models.signals.class_prepared)
-def _make_field_descriptors_sealable(sender, **kwargs):
-    """
-    Automatically make concrete SealableModel subclasses fields sealable.
-    """
-    if not issubclass(sender, SealableModel):
-        return
-    opts = sender._meta
-    if opts.abstract or opts.proxy:
-        return
-    make_model_sealable(sender)

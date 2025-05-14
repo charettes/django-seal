@@ -1,10 +1,6 @@
 import warnings
 from functools import lru_cache
 
-from django.contrib.contenttypes.fields import (
-    GenericForeignKey,
-    ReverseGenericManyToOneDescriptor,
-)
 from django.db.models import QuerySet
 from django.db.models.fields import DeferredAttribute
 from django.db.models.fields.related import (
@@ -245,28 +241,6 @@ class SealableManyToManyDescriptor(ManyToManyDescriptor):
         return create_sealable_related_manager(related_manager_cls, field_name)
 
 
-class SealableGenericForeignKey(GenericForeignKey):
-    def __get__(self, instance, cls=None):
-        if instance is None:
-            return self
-
-        if getattr(instance._state, "sealed", False) and not self.is_cached(instance):
-            message = 'Attempt to fetch related field "%s" on sealed %s.' % (
-                self.name,
-                _bare_repr(instance),
-            )
-            warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
-
-        return super().__get__(instance, cls=cls)
-
-
-class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescriptor):
-    @cached_property
-    def related_manager_cls(self):
-        related_manager_cls = super().related_manager_cls
-        return create_sealable_related_manager(related_manager_cls, self.field.name)
-
-
 class SealableForeignKeyDeferredAttribute(
     SealableDeferredAttribute, ForeignKeyDeferredAttribute
 ):
@@ -280,7 +254,43 @@ sealable_descriptor_classes = {
     ForwardManyToOneDescriptor: SealableForwardManyToOneDescriptor,
     ReverseManyToOneDescriptor: SealableReverseManyToOneDescriptor,
     ManyToManyDescriptor: SealableManyToManyDescriptor,
-    GenericForeignKey: SealableGenericForeignKey,
-    ReverseGenericManyToOneDescriptor: SealableReverseGenericManyToOneDescriptor,
     ForeignKeyDeferredAttribute: SealableForeignKeyDeferredAttribute,
 }
+
+
+def make_contenttypes_sealable():
+    from django.contrib.contenttypes.fields import (
+        GenericForeignKey,
+        ReverseGenericManyToOneDescriptor,
+    )
+
+    # Ensure the function is idempotent.
+    if GenericForeignKey in sealable_descriptor_classes:
+        return
+
+    class SealableGenericForeignKey(GenericForeignKey):
+        def __get__(self, instance, cls=None):
+            if instance is None:
+                return self
+
+            if getattr(instance._state, "sealed", False) and not self.is_cached(
+                instance
+            ):
+                message = 'Attempt to fetch related field "%s" on sealed %s.' % (
+                    self.name,
+                    _bare_repr(instance),
+                )
+                warnings.warn(message, category=UnsealedAttributeAccess, stacklevel=2)
+
+            return super().__get__(instance, cls=cls)
+
+    class SealableReverseGenericManyToOneDescriptor(ReverseGenericManyToOneDescriptor):
+        @cached_property
+        def related_manager_cls(self):
+            related_manager_cls = super().related_manager_cls
+            return create_sealable_related_manager(related_manager_cls, self.field.name)
+
+    sealable_descriptor_classes[GenericForeignKey] = SealableGenericForeignKey
+    sealable_descriptor_classes[ReverseGenericManyToOneDescriptor] = (
+        SealableReverseGenericManyToOneDescriptor
+    )

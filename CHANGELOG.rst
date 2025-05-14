@@ -4,6 +4,7 @@
 
 - Drop support for Python < 3.9.
 - Add tested support for Django 5.2 and Python 3.13.
+- Lift restriction on ``django.contrib.contenttypes`` being installed (#84).
 
 1.6.3
 =====
