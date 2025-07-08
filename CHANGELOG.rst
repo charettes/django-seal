@@ -1,6 +1,6 @@
 1.7.0
 =====
-:release-date: tbd
+:release-date: 2025-07-08
 
 - Drop support for Python < 3.9.
 - Add tested support for Django 5.2 and Python 3.13.
