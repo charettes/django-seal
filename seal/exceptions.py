@@ -1,2 +1,2 @@
-class UnsealedAttributeAccess(AttributeError, Warning):
+class UnsealedAttributeAccess(Warning):
     pass
