@@ -27,6 +27,20 @@ class SealableModelTests(SimpleTestCase):
         warnings.filterwarnings("error", category=UnsealedAttributeAccess)
         self.addCleanup(warnings.resetwarnings)
 
+    def test_installed_apps(self):
+        with self.modify_settings(INSTALLED_APPS={"remove": ["seal"]}):
+            self.assertEqual(
+                SeaLion.check(),
+                [
+                    checks.Error(
+                        "The 'seal' app must be installed to use `SealableModel`.",
+                        id="seal.E002",
+                        hint="Add 'seal' to your `INSTALLED_APPS`.",
+                        obj=SeaLion,
+                    )
+                ],
+            )
+
     def test_sealed_instance_deferred_attribute_access(self):
         instance = SeaLion.from_db("default", ["id"], [1])
         instance.seal()

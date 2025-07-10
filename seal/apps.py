@@ -2,7 +2,7 @@ from django.apps import AppConfig, apps
 
 
 class SealAppConfig(AppConfig):
-    name = __name__
+    name = __package__
 
     def ready(self):
         from .descriptors import make_contenttypes_sealable

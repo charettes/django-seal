@@ -1,3 +1,9 @@
+1.7.1
+=====
+:release-date: 2025-07-10
+
+- Document and check that ``'seal'`` must be part of ``INSTALLED_APPS`` (#85).
+
 1.7.0
 =====
 :release-date: 2025-07-08

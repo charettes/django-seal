@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.core import checks
 from django.db import models
 from django.db.models.fields.related import lazy_related_operation
@@ -76,6 +77,20 @@ class SealableModel(models.Model):
         required fetching from the database into exceptions.
         """
         self._state.sealed = True
+
+    @classmethod
+    def check(cls, **kwargs):
+        errors = super().check(**kwargs)
+        if not apps.is_installed("seal"):
+            errors.append(
+                checks.Error(
+                    "The 'seal' app must be installed to use `SealableModel`.",
+                    id="seal.E002",
+                    hint="Add 'seal' to your `INSTALLED_APPS`.",
+                    obj=cls,
+                )
+            )
+        return errors
 
 
 def make_descriptor_sealable(model, attname):

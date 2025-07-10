@@ -26,6 +26,17 @@ Installation
 
     pip install django-seal
 
+Add ``'seal'`` to your ``INSTALLED_APPS``
+
+.. code:: python
+
+    # settings.py
+    INSTALLED_APPS = [
+        ...
+        'seal',
+        ...
+    ]
+
 Usage
 -----
 
